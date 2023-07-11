@@ -10,6 +10,7 @@ The "Partnership Sort Creation" program is designed to sort the creation files f
 - `Pycharm`
 - `PIL`
 - `TKinter`
+- `Latest version of Python`
 
 
 ## Functionality
