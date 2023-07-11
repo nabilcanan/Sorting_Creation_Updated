@@ -40,8 +40,7 @@ def add_active_award_file():
                     "Internal Comments", "New Special Quote#",
                     "SP Exp Date", "Gil Rev Price", "Gil Rev Margin", "Gil Rev MOQ", "Gil Rev SPQ",
                     "Gil Rev Price Match", "Price OK", "Min OK",
-                    "BOM COMMENT", "Status", "Assigned"
-                    ]
+                    "BOM COMMENT", "Status", "Assigned"]
 
     columns_length = len(active_sheet[1])  # Get the length of the first row (columns count)
     for i, column_name in enumerate(column_names, start=1):
