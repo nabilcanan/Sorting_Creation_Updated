@@ -1,6 +1,6 @@
 # Partnership Sort Creation
 
-The "Partnership Sort Creation" program is designed to sort the creation files for the week and perform various data operations on them. This program helps organize and consolidate the data for efficient processing.
+The "Partnership Sort Creation" program is designed to sort the creation files for the week and perform various data operations within them. This program helps organize and consolidate the data for efficient processing.
 
 ## Requirements
 
@@ -38,13 +38,7 @@ The "Partnership Sort Creation" program is designed to sort the creation files f
 2. Follow the prompts and select the appropriate options to sort or merge the files.
 3. The program will automatically perform the operations and save the resulting files.
 
-## Currently Working:
 
-1. The program can sort any creation files, so you don't need to go into them and sort according to ...
-2. Once that is complete and saved to a folder of your choosing the file will take the current contract file, last week's contract file and place them into one sheet
-3. After that you must choose the files as so to merge them into one sheet: Current week file, Previous week file, Awards File, Backlog File, Sales History file, SND File, VPC File.
-4. The program should automatically sort the file as such and provide another sheet that shows any missing items from the previous week to the current week. 
-5. Added the ability to choose all the files we want to add to the active supplier contracts file and includes every sheet we need to work on our file
 
 Please ensure that you have the necessary dependencies installed before running the program. Refer to the "Requirements" section for details.
 
