@@ -22,9 +22,27 @@ def add_active_award_file():
     active_award_file_path = file_paths[0]
     active_award_workbook = load_workbook(active_award_file_path)
 
-    # Add columns to Active Supplier Contracts sheet
+    # Add columns to Active Supplier Contracts sheet and add more columns into the sheet we need
     active_sheet = active_award_workbook["Active Supplier Contracts"]
-    column_names = ["GP%", "Cost", "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ"]
+    column_names = ["GP%", "Cost", "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "Prev Contract MPN",
+                    "Prev Contract Price",
+                    "MPN Match", "Price Match MPN", "LAST WEEK Contract Change", "Contract Change", "PSoft Part",
+                    "count",
+                    "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?", "PS Award Price", "PS Award Exp Date",
+                    "PS Awd Cust ID",
+                    "Price Match Award", "Corp Awd Loaded", "Review Note", "90 DAY PI - NEW PRICE", "PI SENT DATE",
+                    "DIFF Price Increase",
+                    "PI EFF DATE", "12 Month CPN Sales", "DIFF LW", "LW Cost", "LW Cost Note", "LW Cost Exp Date",
+                    "LW Review Note", "Estimated $ Value",
+                    "Estimated Cost$", "Estimated GP$", "GL-Interconnect Qte - Feb (Y/N)", "DS-Battery Qte - Mar (Y/N)",
+                    "Part Class", "Sager Stock",
+                    "Cost to Use 1", "Resale 1", "Price Match", "Sager Min", "Min Match", "New Special Cost",
+                    "Internal Comments", "New Special Quote#",
+                    "SP Exp Date", "Gil Rev Price", "Gil Rev Margin", "Gil Rev MOQ", "Gil Rev SPQ",
+                    "Gil Rev Price Match", "Price OK", "Min OK",
+                    "BOM COMMENT", "Status", "Assigned"
+                    ]
+
     columns_length = len(active_sheet[1])  # Get the length of the first row (columns count)
     for i, column_name in enumerate(column_names, start=1):
         active_sheet.cell(row=1, column=i + columns_length).value = column_name
