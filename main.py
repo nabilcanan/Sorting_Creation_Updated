@@ -7,6 +7,8 @@ from openpyxl import load_workbook
 from tkinter import filedialog, messagebox
 
 
+# does not bring in missing items, and the columns brought in for V LOOKup are bringing in slightly different values
+
 def add_active_award_file():
     file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC",
                   "Running File - 30 Day Notice Contract Price Increase_Sager - COSTED"]
@@ -92,7 +94,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files")
         self.window.configure(bg="white")
-        self.window.geometry("1500x750")
+        self.window.geometry("1600x750")
         self.file_paths = []
         self.create_widgets()
 
@@ -138,7 +140,7 @@ class ExcelSorter:
                                                                     " Order to select files is: Current Contract, "
                                                                     "Previous Weeks Contract, Awards, Backlog, "
                                                                     "Sales History, SND, VPC, Running File",
-                                                               font=("Times New Roman", 14), background="white")
+                                                               font=("Times New Roman", 16), background="white")
         add_instructions_for_active_contracts_file.pack(pady=10)
 
         add_active_award_button = ttk.Button(self.window, text="Prepare Your Active Contracts File",
