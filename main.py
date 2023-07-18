@@ -53,6 +53,9 @@ def add_active_award_file():
     prev_contract_file_path = file_paths[1]
     prev_df = pd.read_excel(prev_contract_file_path, header=0)
 
+    # Convert GP% to a percentage in the 'Prev Contract' dataframe
+    prev_df["GP%"] = prev_df["GP%"].apply(lambda x: x / 100)
+
     # Create 'Lost Items' sheet
     lost_items_df = prev_df[~prev_df['IPN'].isin(active_df['IPN'])]
     lost_items_sheet = active_award_workbook.create_sheet('Lost Items')
@@ -94,13 +97,13 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files")
         self.window.configure(bg="white")
-        self.window.geometry("1600x750")
+        self.window.geometry("1800x750")
         self.file_paths = []
         self.create_widgets()
 
     def create_widgets(self):
         style = ttk.Style()
-        style.configure("TButton", font=("Times New Roman", 14, "bold"), width=32, height=2)
+        style.configure("TButton", font=("Times New Roman", 14, "bold"), width=60, height=2)
         style.map("TButton",
                   foreground=[('active', 'red')],
                   background=[('active', 'blue')])
@@ -108,6 +111,13 @@ class ExcelSorter:
         title_label = ttk.Label(self.window, text="Welcome Partnership Member!",
                                 font=("Times New Roman", 30, "underline"), background="white")
         title_label.pack(pady=10)
+
+        logo_image = Image.open('images/electronic.png')
+        logo_image = logo_image.resize((200, 200), Image.ANTIALIAS)
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = ttk.Label(self.window, image=logo_photo, background="white")
+        logo_label.image = logo_photo
+        logo_label.place(x=1575, y=0)
 
         description_label = ttk.Label(self.window,
                                       text="-This tool allows you to sort your Excel files for our Creation "
