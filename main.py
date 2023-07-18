@@ -8,6 +8,7 @@ from tkinter import filedialog, messagebox
 
 
 # does not bring in missing items, and the columns brought in for V LOOKup are bringing in slightly different values
+# need to double-check function of adding the correct columns to the prev contract file 
 
 def add_active_award_file():
     file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC",
