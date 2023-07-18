@@ -120,9 +120,9 @@ class ExcelSorter:
         logo_label.place(x=1575, y=0)
 
         description_label = ttk.Label(self.window,
-                                      text="-This tool allows you to sort your Excel files for our Creation "
-                                           "Contact-",
-                                      font=("Times New Roman", 14), background="white")
+                                      text="This tool allows you to sort your Excel files for our Creation "
+                                           "Contact",
+                                      font=("Times New Roman", 14, "underline"), background="white")
         description_label.pack(pady=10)
 
         sort_award_button = ttk.Button(self.window, text="Sort Award File", command=self.sort_award_file,
