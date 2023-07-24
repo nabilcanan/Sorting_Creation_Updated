@@ -7,9 +7,6 @@ from openpyxl import load_workbook
 from tkinter import filedialog, messagebox
 
 
-# does not bring in missing items, and the columns brought in for V LOOKup are bringing in slightly different values
-# need to double-check function of adding the correct columns to the prev contract file
-
 def add_active_award_file():
     file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC",
                   "Running File - 30 Day Notice Contract Price Increase_Sager - COSTED"]
@@ -67,7 +64,7 @@ def add_active_award_file():
     for file_path, file_name in zip(file_paths[1:], file_names[1:]):  # Skip active_award_file
         data = pd.read_excel(file_path)
 
-        if file_name == "Prev Contract":  # Perform VLOOKUP-like operation for Prev Contract file
+        if file_name == "Prev Contract":  # Perform VLOOKUP operation for the prev contract to active
             for row in range(2, active_sheet.max_row + 1):
                 ipn = active_sheet.cell(row=row, column=1).value
                 matching_row = data[data["IPN"] == ipn]
