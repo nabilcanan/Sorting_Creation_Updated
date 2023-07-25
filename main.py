@@ -7,7 +7,7 @@ from openpyxl import load_workbook
 from tkinter import filedialog, messagebox
 
 
-# Currently working properly
+# Currently the active supplier contracts file is the same as the previous contracts file we need to check the data when the process is complete
 
 def add_active_award_file():
     file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC",
