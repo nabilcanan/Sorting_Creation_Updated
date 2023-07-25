@@ -51,8 +51,8 @@ def add_active_award_file():
     prev_contract_file_path = file_paths[1]
     prev_df = pd.read_excel(prev_contract_file_path, header=0)
 
-    # Convert GP% to a percentage in the 'Prev Contract' dataframe
-    prev_df["GP%"] = prev_df["GP%"].apply(lambda x: x / 100)
+    # # Convert GP% to a percentage in the 'Prev Contract' dataframe
+    # prev_df["GP%"] = prev_df["GP%"].apply(lambda x: x / 100)
 
     # Create 'Lost Items' sheet
     lost_items_df = prev_df[~prev_df['IPN'].isin(active_df['IPN'])]
