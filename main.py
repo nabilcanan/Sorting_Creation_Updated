@@ -97,7 +97,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files")
         self.window.configure(bg="white")
-        self.window.geometry("1800x750")
+        self.window.geometry("1800x880")
         self.file_paths = []
         self.create_widgets()
 
@@ -112,12 +112,12 @@ class ExcelSorter:
                                 font=("Times New Roman", 30, "underline"), background="white")
         title_label.pack(pady=10)
 
-        logo_image = Image.open('images/electronic.png')
-        logo_image = logo_image.resize((200, 200), Image.ANTIALIAS)
-        logo_photo = ImageTk.PhotoImage(logo_image)
-        logo_label = ttk.Label(self.window, image=logo_photo, background="white")
-        logo_label.image = logo_photo
-        logo_label.place(x=1575, y=0)
+        # logo_image = Image.open('images/electronic.png')
+        # logo_image = logo_image.resize((200, 200), Image.ANTIALIAS)
+        # logo_photo = ImageTk.PhotoImage(logo_image)
+        # logo_label = ttk.Label(self.window, image=logo_photo, background="white")
+        # logo_label.image = logo_photo
+        # logo_label.place(x=1575, y=0)
 
         description_label = ttk.Label(self.window,
                                       text="This tool allows you to sort your Excel files for our Creation "
@@ -144,14 +144,19 @@ class ExcelSorter:
         sort_vpc = ttk.Button(self.window, text="Sort VPC File", command=self.sort_vpc, style="TButton")
         sort_vpc.pack(pady=10)
 
-        add_instructions_for_active_contracts_file = ttk.Label(self.window,
-                                                               text="This last button will allow you to merge your "
-                                                                    "files accordingly."
-                                                                    " Order to select files is: Current Contract, "
-                                                                    "Previous Weeks Contract, Awards, Backlog, "
-                                                                    "Sales History, SND, VPC, Running File",
-                                                               font=("Times New Roman", 16), background="white")
-        add_instructions_for_active_contracts_file.pack(pady=10)
+        add_instructions_for_active_contracts_file = ttk.Label(
+            self.window,
+            text="This last button will allow you to merge your files accordingly now that they are sorted.\n"
+                 "Order to Select Files:\n Current Contract\n "
+                 "Previous Weeks Contract\n Awards File, Backlog File\n "
+                 "Sales History File\n SND File, VPC File\n  Finally Running File",
+            font=("Times New Roman", 16),
+            background="white",
+            anchor="center",
+            justify="center",
+            wraplength=1000  # adjust this to fit your window size
+        )
+        add_instructions_for_active_contracts_file.pack(pady=2)
 
         add_active_award_button = ttk.Button(self.window, text="Prepare Your Active Contracts File",
                                              command=add_active_award_file, style="TButton")
