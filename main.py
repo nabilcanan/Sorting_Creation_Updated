@@ -48,16 +48,25 @@ def add_active_award_file():
     for i, column_name in enumerate(column_names, start=1):
         active_sheet.cell(row=1, column=i + columns_length).value = column_name
 
-    # Load active and prev contract dataframes
-    active_df = pd.read_excel(active_award_file_path, header=1)
-    prev_contract_file_path = file_paths[1]
-    prev_df = pd.read_excel(prev_contract_file_path, header=0)
+    # Save the changes made to the active_sheet
+    active_award_workbook.save(active_award_file_path)
 
-    # Create 'Lost Items' sheet
-    lost_items_df = prev_df[~prev_df['IPN'].isin(active_df['IPN'])]
+    # Load active and prev contract dataframes
+    active_df = pd.read_excel(active_award_file_path, sheet_name=0,
+                              skiprows=1)  # considering headers on 2nd row in 1st file
+    prev_contract_file_path = file_paths[1]
+    prev_df = pd.read_excel(prev_contract_file_path, sheet_name=1)  # headers on 1st row in 2nd file
+
+    # Always create 'Lost Items' sheet
     lost_items_sheet = active_award_workbook.create_sheet('Lost Items')
-    for r in dataframe_to_rows(lost_items_df, index=False, header=True):
-        lost_items_sheet.append(r)
+
+    # Add data to 'Lost Items' sheet only if there are lost items
+    lost_items_df = prev_df[~prev_df['IPN'].isin(active_df['IPN'])]
+    if not lost_items_df.empty:  # check if there are lost items
+        for r in dataframe_to_rows(lost_items_df, index=False, header=True):
+            lost_items_sheet.append(r)
+    else:
+        lost_items_sheet.append(list(prev_df.columns))  # append headers only
 
     # Load and merge data from other files
     for file_path, file_name in zip(file_paths[1:], file_names[1:]):  # Skip active_award_file
@@ -82,11 +91,13 @@ def add_active_award_file():
         new_sheet = active_award_workbook.create_sheet(title=file_name)
         for r in dataframe_to_rows(data, index=False, header=True):
             new_sheet.append(r)
+
     try:
         active_award_workbook.save(active_award_file_path)
         messagebox.showinfo("Success!", "Files merged, columns added, and VLOOKUP completed successfully.")
     except Exception as e:
         messagebox.showerror("Error", str(e))
+
 
 
 class ExcelSorter:
