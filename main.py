@@ -99,13 +99,12 @@ def add_active_award_file():
         messagebox.showerror("Error", str(e))
 
 
-
 class ExcelSorter:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files")
         self.window.configure(bg="white")
-        self.window.geometry("1800x880")
+        self.window.geometry("1200x880")
         self.file_paths = []
         self.create_widgets()
 
@@ -119,13 +118,6 @@ class ExcelSorter:
         title_label = ttk.Label(self.window, text="Welcome Partnership Member!",
                                 font=("Times New Roman", 30, "underline"), background="white")
         title_label.pack(pady=10)
-
-        # logo_image = Image.open('images/electronic.png')
-        # logo_image = logo_image.resize((200, 200), Image.ANTIALIAS)
-        # logo_photo = ImageTk.PhotoImage(logo_image)
-        # logo_label = ttk.Label(self.window, image=logo_photo, background="white")
-        # logo_label.image = logo_photo
-        # logo_label.place(x=1575, y=0)
 
         description_label = ttk.Label(self.window,
                                       text="This tool allows you to sort your Excel files for our Creation "
@@ -155,9 +147,9 @@ class ExcelSorter:
         add_instructions_for_active_contracts_file = ttk.Label(
             self.window,
             text="This last button will allow you to merge your files accordingly now that they are sorted.\n"
-                 "Order to Select Files:\n Current Contract\n "
-                 "Previous Weeks Contract\n Awards File, Backlog File\n "
-                 "Sales History File\n SND File, VPC File\n  Finally Running File",
+                 "Order to Select Files:\n 1. Current Contract\n "
+                 "2. Previous Weeks Contract\n 3. Awards File, 4. Backlog File\n "
+                 "5. Sales History File\n 6. SND File, 7. VPC File\n  8. Finally Running File",
             font=("Times New Roman", 16),
             background="white",
             anchor="center",
