@@ -11,7 +11,7 @@ class ExcelSorter:
     def __init__(self):
         self.filename = None
         self.window = tk.Tk()
-        self.window.title("Sorting Creation Files")
+        self.window.title("Sorting Creation Files For Contract")
         self.window.configure(bg="white")
         self.window.geometry("1000x600")
 
@@ -35,7 +35,7 @@ class ExcelSorter:
         # Configure the canvas to expand and fill the window
         self.canvas.pack(side="left", fill="both", expand=True, padx=20, pady=20)
 
-        # Configure the canvas to scroll with the scrollbar
+        # Canvas - Scrollbar 
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         self.scrollbar.configure(command=self.canvas.yview)
 
@@ -112,7 +112,7 @@ class ExcelSorter:
             background="white",
             anchor="center",
             justify="center",
-            wraplength=1000  # adjust this to fit your window size
+            wraplength=1000
         )
         add_instructions_for_active_contracts_file.pack(pady=2)
 
