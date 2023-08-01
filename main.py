@@ -7,145 +7,107 @@ from openpyxl import load_workbook
 from tkinter import filedialog, messagebox
 
 
-#  Program works as expected
-
-def add_active_award_file():
-    file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC",
-                  "Running File - 30 Day Notice Contract Price Increase_Sager - COSTED"]
-    file_paths = []
-
-    for file_name in file_names:
-        file_path = filedialog.askopenfilename(title="Select {} file".format(file_name))
-        if not file_path:
-            messagebox.showerror("Error", "File selection cancelled.")
-            return
-        file_paths.append(file_path)
-
-    active_award_file_path = file_paths[0]
-    active_award_workbook = load_workbook(active_award_file_path)
-
-    # Add columns to Active Supplier Contracts sheet and add more columns into the sheet we need
-    active_sheet = active_award_workbook["Active Supplier Contracts"]
-    column_names = ["GP%", "Cost", "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "Prev Contract MPN",
-                    "Prev Contract Price",
-                    "MPN Match", "Price Match MPN", "LAST WEEK Contract Change", "Contract Change", "PSoft Part",
-                    "count",
-                    "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?", "PS Award Price", "PS Award Exp Date",
-                    "PS Awd Cust ID",
-                    "Price Match Award", "Corp Awd Loaded", "Review Note", "90 DAY PI - NEW PRICE", "PI SENT DATE",
-                    "DIFF Price Increase",
-                    "PI EFF DATE", "12 Month CPN Sales", "DIFF LW", "LW Cost", "LW Cost Note", "LW Cost Exp Date",
-                    "LW Review Note", "Estimated $ Value",
-                    "Estimated Cost$", "Estimated GP$", "GL-Interconnect Qte - Feb (Y/N)", "DS-Battery Qte - Mar (Y/N)",
-                    "Part Class", "Sager Stock",
-                    "Cost to Use 1", "Resale 1", "Price Match", "Sager Min", "Min Match", "New Special Cost",
-                    "Internal Comments", "New Special Quote#",
-                    "SP Exp Date", "Gil Rev Price", "Gil Rev Margin", "Gil Rev MOQ", "Gil Rev SPQ",
-                    "Gil Rev Price Match", "Price OK", "Min OK",
-                    "BOM COMMENT", "Status", "Assigned"]
-
-    columns_length = len(active_sheet[1])  # Get the length of the first row (columns count)
-    for i, column_name in enumerate(column_names, start=1):
-        active_sheet.cell(row=1, column=i + columns_length).value = column_name
-
-    # Save the changes made to the active_sheet
-    active_award_workbook.save(active_award_file_path)
-
-    # Load active and prev contract dataframes
-    active_df = pd.read_excel(active_award_file_path, sheet_name=0,
-                              skiprows=1)  # considering headers on 2nd row in 1st file
-    prev_contract_file_path = file_paths[1]
-    prev_df = pd.read_excel(prev_contract_file_path, sheet_name=1)  # headers on 1st row in 2nd file
-
-    # Always create 'Lost Items' sheet
-    lost_items_sheet = active_award_workbook.create_sheet('Lost Items')
-
-    # Add data to 'Lost Items' sheet only if there are lost items
-    lost_items_df = prev_df[~prev_df['IPN'].isin(active_df['IPN'])]
-    if not lost_items_df.empty:  # check if there are lost items
-        for r in dataframe_to_rows(lost_items_df, index=False, header=True):
-            lost_items_sheet.append(r)
-    else:
-        lost_items_sheet.append(list(prev_df.columns))  # append headers only
-
-    # Load and merge data from other files
-    for file_path, file_name in zip(file_paths[1:], file_names[1:]):  # Skip active_award_file
-        data = pd.read_excel(file_path)
-
-        if file_name == "Prev Contract":  # Perform VLOOKUP operation for the prev contract to active
-            for row in range(2, active_sheet.max_row + 1):
-                ipn = active_sheet.cell(row=row, column=1).value
-                matching_row = data[data["IPN"] == ipn]
-                if not matching_row.empty:
-                    for i, column_name in enumerate(column_names, start=1):
-                        cell = active_sheet.cell(row=row, column=i + columns_length)
-                        cell.value = matching_row[column_name].values[0]
-
-                        # Set the number format for the 'GP%' and 'Cost' columns
-                        if column_name == "GP%":
-                            cell.number_format = '0.00%'
-                        elif column_name == "Cost":
-                            cell.number_format = '$#,##0.00'
-
-        # Create a new sheet for each file and add data to it
-        new_sheet = active_award_workbook.create_sheet(title=file_name)
-        for r in dataframe_to_rows(data, index=False, header=True):
-            new_sheet.append(r)
-
-    try:
-        active_award_workbook.save(active_award_file_path)
-        messagebox.showinfo("Success!", "Files merged, columns added, and VLOOKUP completed successfully.")
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
-
-
 class ExcelSorter:
     def __init__(self):
+        self.filename = None
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files")
         self.window.configure(bg="white")
-        self.window.geometry("1200x900")
-        self.file_paths = []
-        self.create_widgets()
+        self.window.geometry("1200x1000")
 
-    def create_widgets(self):
+        # Create a canvas and a vertical scrollbar
+        self.canvas = tk.Canvas(self.window)
+        self.scrollbar = ttk.Scrollbar(self.window, orient="vertical", command=self.canvas.yview)
+
+        # Configure the canvas to respond to the scrollbar
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # Create a frame to hold your widgets, and add it to the canvas
+        self.frame = ttk.Frame(self.canvas)
+        self.canvas.create_window((0, 0), window=self.frame, anchor="nw")
+
+        # Configure the canvas's scroll-region to encompass the frame
+        self.frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+
+        # Pack the scrollbar, making sure it sticks to the right side
+        self.scrollbar.pack(side="right", fill="y")
+
+        # Center the frame in the window using grid
+        self.window.columnconfigure(0, weight=1)
+        self.window.rowconfigure(0, weight=1)
+
+        # Configure the canvas to expand and fill the window
+        self.canvas.pack(side="left", fill="both", expand=True, padx=20, pady=20)
+
+        # Configure the canvas to scroll with the scrollbar
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.scrollbar.configure(command=self.canvas.yview)
+
+        self.file_paths = []
+        self.column_names = ["GP%", "Cost", "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "Prev Contract MPN",
+                             "Prev Contract Price",
+                             "MPN Match", "Price Match MPN", "LAST WEEK Contract Change", "Contract Change",
+                             "PSoft Part",
+                             "count",
+                             "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?", "PS Award Price",
+                             "PS Award Exp Date",
+                             "PS Awd Cust ID",
+                             "Price Match Award", "Corp Awd Loaded", "Review Note", "90 DAY PI - NEW PRICE",
+                             "PI SENT DATE",
+                             "DIFF Price Increase",
+                             "PI EFF DATE", "12 Month CPN Sales", "DIFF LW", "LW Cost", "LW Cost Note",
+                             "LW Cost Exp Date",
+                             "LW Review Note", "Estimated $ Value",
+                             "Estimated Cost$", "Estimated GP$", "GL-Interconnect Qte - Feb (Y/N)",
+                             "DS-Battery Qte - Mar (Y/N)",
+                             "Part Class", "Sager Stock",
+                             "Cost to Use 1", "Resale 1", "Price Match", "Sager Min", "Min Match", "New Special Cost",
+                             "Internal Comments", "New Special Quote#",
+                             "SP Exp Date", "Gil Rev Price", "Gil Rev Margin", "Gil Rev MOQ", "Gil Rev SPQ",
+                             "Gil Rev Price Match", "Price OK", "Min OK",
+                             "BOM COMMENT", "Status", "Assigned"]
+        self.columns_length = len(self.column_names)  # Calculate the columns_length here
+        self.create_widgets(self.frame)
+
+    def create_widgets(self, frame):
         style = ttk.Style()
         style.configure("TButton", font=("Arial", 14, "bold"), width=60, height=2)
         style.map("TButton",
                   foreground=[('active', 'red')],
                   background=[('active', 'blue')])
+        style.configure("TButton", background="white")  # Change the button background color to white
 
-        title_label = ttk.Label(self.window, text="Welcome Partnership Member!",
+        title_label = ttk.Label(frame, text="Welcome Partnership Member!",
                                 font=("Arial", 36, "underline"), background="white")
         title_label.pack(pady=10)
 
-        description_label = ttk.Label(self.window,
+        description_label = ttk.Label(frame,
                                       text="This tool allows you to sort your Excel files for our Creation "
                                            "Contact",
                                       font=("Arial", 16, "underline"), background="white")
         description_label.pack(pady=10)
 
-        sort_award_button = ttk.Button(self.window, text="Sort Award File", command=self.sort_award_file,
+        sort_award_button = ttk.Button(frame, text="Sort Award File", command=self.sort_award_file,
                                        style="TButton")
         sort_award_button.pack(pady=10)
 
-        sort_backlog_button = ttk.Button(self.window, text="Sort Backlog File", command=self.sort_backlog_file,
+        sort_backlog_button = ttk.Button(frame, text="Sort Backlog File", command=self.sort_backlog_file,
                                          style="TButton")
         sort_backlog_button.pack(pady=10)
 
-        sort_last_ship_date_button = ttk.Button(self.window, text="Sort Sales History File",
+        sort_last_ship_date_button = ttk.Button(frame, text="Sort Sales History File",
                                                 command=self.sort_by_last_ship_date, style="TButton")
         sort_last_ship_date_button.pack(pady=10)
 
-        sort_ship_and_debit = ttk.Button(self.window, text="Sort SND File", command=self.sort_ship_and_debit,
+        sort_ship_and_debit = ttk.Button(frame, text="Sort SND File", command=self.sort_ship_and_debit,
                                          style="TButton")
         sort_ship_and_debit.pack(pady=10)
 
-        sort_vpc = ttk.Button(self.window, text="Sort VPC File", command=self.sort_vpc, style="TButton")
+        sort_vpc = ttk.Button(frame, text="Sort VPC File", command=self.sort_vpc, style="TButton")
         sort_vpc.pack(pady=10)
 
         add_instructions_for_active_contracts_file = ttk.Label(
-            self.window,
+            frame,
             text="This last button will allow you to merge your files accordingly now that they are sorted.\n"
                  "Order to Select Files:\n 1. Current Contract\n "
                  "2. Previous Weeks Contract\n 3. Awards File, 4. Backlog File\n "
@@ -158,17 +120,120 @@ class ExcelSorter:
         )
         add_instructions_for_active_contracts_file.pack(pady=2)
 
-        add_active_award_button = ttk.Button(self.window, text="Prepare Your Active Contracts File",
-                                             command=add_active_award_file, style="TButton")
-        add_active_award_button.pack(pady=10)
+        merge_and_create_lost_items_button = ttk.Button(frame, text="Merge Files and Create 'Lost Items' Sheet",
+                                                        command=self.merge_files_and_create_lost_items, style="TButton")
+        merge_and_create_lost_items_button.pack(pady=10)
 
-        logo_label = ttk.Label(self.window, background="white")
+        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOKUP",
+                                            command=self.perform_vlookup, style="TButton")
+        perform_vlookup_button.pack(pady=10)
+
+        logo_label = ttk.Label(frame, background="white")
         logo_label.pack(pady=10)
 
         logo_image = Image.open('images/Sager-logo.png')
         logo_image = ImageTk.PhotoImage(logo_image)
         logo_label.config(image=logo_image)
         logo_label.image = logo_image
+
+        # Center all the widgets vertically in the frame
+        for widget in frame.winfo_children():
+            widget.pack_configure(pady=5)
+
+    @staticmethod
+    def merge_files_and_create_lost_items():
+        file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC",
+                      "Running File - 30 Day Notice Contract Price Increase_Sager - COSTED"]
+        file_paths = []
+
+        for file_name in file_names:
+            file_path = filedialog.askopenfilename(title="Select {} file".format(file_name))
+            if not file_path:
+                messagebox.showerror("Error", "File selection cancelled.")
+                return
+            file_paths.append(file_path)
+
+        active_award_file_path = file_paths[0]
+        active_award_workbook = load_workbook(active_award_file_path)
+
+        # Load active and prev contract dataframes
+        active_df = pd.read_excel(active_award_file_path, sheet_name=0,
+                                  skiprows=1)  # considering headers on 2nd row in 1st file
+        prev_contract_file_path = file_paths[1]
+        prev_df = pd.read_excel(prev_contract_file_path, sheet_name=1)  # headers on 1st row in 2nd file
+
+        # Always create 'Lost Items' sheet
+        lost_items_sheet = active_award_workbook.create_sheet('Lost Items')
+
+        # Add data to 'Lost Items' sheet only if there are lost items
+        lost_items_df = prev_df[~prev_df['IPN'].isin(active_df['IPN'])]
+        if not lost_items_df.empty:  # check if there are lost items
+            for r in dataframe_to_rows(lost_items_df, index=False, header=True):
+                lost_items_sheet.append(r)
+        else:
+            lost_items_sheet.append(list(prev_df.columns))  # append headers only
+
+        # Load and merge data from other files
+        for file_path, file_name in zip(file_paths[1:], file_names[1:]):  # Skip active_award_file
+            data = pd.read_excel(file_path)
+
+            # Create a new sheet for each file and add data to it
+            new_sheet = active_award_workbook.create_sheet(title=file_name)
+            for r in dataframe_to_rows(data, index=False, header=True):
+                new_sheet.append(r)
+
+        try:
+            active_award_workbook.save(active_award_file_path)
+            messagebox.showinfo("Success!", "Files merged and 'Lost Items' sheet created successfully.")
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    def browse_files(self):
+        self.filename = filedialog.askopenfilename()
+
+    @staticmethod
+    def perform_vlookup():
+        # Ask the user for the file paths
+        this_week_file = filedialog.askopenfilename(title="Select current week file")
+        last_week_file = filedialog.askopenfilename(title="Select last week's contract file")
+        active_supplier_contracts_file = filedialog.askopenfilename(title="Select active supplier contracts file")
+
+        # Read the data from files
+        with pd.ExcelFile(this_week_file) as xls:
+            this_week_df = pd.read_excel(xls, header=1)
+            other_sheets = {sheet_name: pd.read_excel(xls, sheet_name) for sheet_name in xls.sheet_names[1:]}
+
+        last_week_df = pd.read_excel(last_week_file, header=0)
+        active_supplier_contracts_df = pd.read_excel(active_supplier_contracts_file, header=1)
+
+        # Checking whether 'IPN' is in each DataFrame's columns
+        print('IPN' in this_week_df.columns)
+        print('IPN' in last_week_df.columns)
+        print('IPN' in active_supplier_contracts_df.columns)
+
+        # Merge this week's file and last week's file first, then merge that with the active supplier contracts file
+        # Based on the 'IPN' column
+        merged_df = pd.merge(this_week_df, last_week_df, on='IPN', how='outer', suffixes=('_this_week', '_last_week'))
+        final_df = pd.merge(merged_df, active_supplier_contracts_df, on='IPN', how='left')
+
+        # Define a function to identify price changes
+        def price_changed(row):
+            if pd.isnull(row['Price_this_week']) or pd.isnull(row['Price_last_week']):
+                return 'N'
+            return 'Y' if row['Price_this_week'] != row['Price_last_week'] else 'N'
+
+        # Add 'Price Change This Week' column
+        final_df['Price Change This Week'] = final_df.apply(price_changed, axis=1)
+
+        # Ask the user for the output file path
+        output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
+
+        # Write the data to a new Excel file
+        if output_file:
+            with pd.ExcelWriter(output_file) as writer:
+                final_df.to_excel(writer, index=False, sheet_name='Merged Data')
+                for sheet_name, df in other_sheets.items():
+                    df.to_excel(writer, index=False, sheet_name=sheet_name)
 
     @staticmethod
     def select_file():
