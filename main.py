@@ -120,7 +120,7 @@ class ExcelSorter:
                                                         command=self.merge_files_and_create_lost_items, style="TButton")
         merge_and_create_lost_items_button.pack(pady=10)
 
-        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOKUP",
+        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOKUP for Current Weeks Contract",
                                             command=self.perform_vlookup, style="TButton")
         perform_vlookup_button.pack(pady=10)
 
@@ -180,7 +180,7 @@ class ExcelSorter:
 
         try:
             active_award_workbook.save(active_award_file_path)
-            messagebox.showinfo("Success!", "Files merged and 'Lost Items' sheet created successfully.")
+            messagebox.showinfo("Success!", "Files merged and 'Lost Items' sheet created successfully with any missing IPN's from last week that are not in the current weeks file.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
@@ -190,8 +190,8 @@ class ExcelSorter:
     @staticmethod
     def perform_vlookup():
         # Ask the user for the file paths
-        this_week_file = filedialog.askopenfilename(title="Select current week file")
-        last_week_file = filedialog.askopenfilename(title="Select last week's contract file")
+        this_week_file = filedialog.askopenfilename(title="Select current week contract file")
+        last_week_file = filedialog.askopenfilename(title="Select last week's contract contract file")
         active_supplier_contracts_file = filedialog.askopenfilename(title="Select active supplier contracts file")
 
         try:
@@ -229,7 +229,7 @@ class ExcelSorter:
                         df.to_excel(writer, index=False, sheet_name=sheet_name)
 
                 # Display a success message in a message box
-                messagebox.showinfo("Success!", "The output file has been saved as: " + output_file)
+                messagebox.showinfo("Success! Your VLOOKUP was completed.", "The output file has been saved as: " + output_file)
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
