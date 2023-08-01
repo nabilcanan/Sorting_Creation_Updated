@@ -104,25 +104,25 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files")
         self.window.configure(bg="white")
-        self.window.geometry("1200x880")
+        self.window.geometry("1200x900")
         self.file_paths = []
         self.create_widgets()
 
     def create_widgets(self):
         style = ttk.Style()
-        style.configure("TButton", font=("Times New Roman", 14, "bold"), width=60, height=2)
+        style.configure("TButton", font=("Arial", 14, "bold"), width=60, height=2)
         style.map("TButton",
                   foreground=[('active', 'red')],
                   background=[('active', 'blue')])
 
         title_label = ttk.Label(self.window, text="Welcome Partnership Member!",
-                                font=("Times New Roman", 30, "underline"), background="white")
+                                font=("Arial", 36, "underline"), background="white")
         title_label.pack(pady=10)
 
         description_label = ttk.Label(self.window,
                                       text="This tool allows you to sort your Excel files for our Creation "
                                            "Contact",
-                                      font=("Times New Roman", 14, "underline"), background="white")
+                                      font=("Arial", 16, "underline"), background="white")
         description_label.pack(pady=10)
 
         sort_award_button = ttk.Button(self.window, text="Sort Award File", command=self.sort_award_file,
@@ -150,7 +150,7 @@ class ExcelSorter:
                  "Order to Select Files:\n 1. Current Contract\n "
                  "2. Previous Weeks Contract\n 3. Awards File, 4. Backlog File\n "
                  "5. Sales History File\n 6. SND File, 7. VPC File\n  8. Finally Running File",
-            font=("Times New Roman", 16),
+            font=("Arial", 18),
             background="white",
             anchor="center",
             justify="center",
