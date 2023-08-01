@@ -13,7 +13,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files")
         self.window.configure(bg="white")
-        self.window.geometry("1200x1000")
+        self.window.geometry("1000x600")
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -23,18 +23,14 @@ class ExcelSorter:
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
         # Create a frame to hold your widgets, and add it to the canvas
-        self.frame = ttk.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=self.frame, anchor="nw")
+        self.inner_frame = ttk.Frame(self.canvas)
+        self.canvas.create_window((self.window.winfo_width() / 2, 0), window=self.inner_frame, anchor="n")
 
         # Configure the canvas's scroll-region to encompass the frame
-        self.frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.inner_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
         # Pack the scrollbar, making sure it sticks to the right side
         self.scrollbar.pack(side="right", fill="y")
-
-        # Center the frame in the window using grid
-        self.window.columnconfigure(0, weight=1)
-        self.window.rowconfigure(0, weight=1)
 
         # Configure the canvas to expand and fill the window
         self.canvas.pack(side="left", fill="both", expand=True, padx=20, pady=20)
@@ -67,7 +63,7 @@ class ExcelSorter:
                              "Gil Rev Price Match", "Price OK", "Min OK",
                              "BOM COMMENT", "Status", "Assigned"]
         self.columns_length = len(self.column_names)  # Calculate the columns_length here
-        self.create_widgets(self.frame)
+        self.create_widgets(self.inner_frame)
 
     def create_widgets(self, frame):
         style = ttk.Style()
@@ -198,42 +194,44 @@ class ExcelSorter:
         last_week_file = filedialog.askopenfilename(title="Select last week's contract file")
         active_supplier_contracts_file = filedialog.askopenfilename(title="Select active supplier contracts file")
 
-        # Read the data from files
-        with pd.ExcelFile(this_week_file) as xls:
-            this_week_df = pd.read_excel(xls, header=1)
-            other_sheets = {sheet_name: pd.read_excel(xls, sheet_name) for sheet_name in xls.sheet_names[1:]}
+        try:
+            # Read the data from files
+            with pd.ExcelFile(this_week_file) as xls:
+                this_week_df = pd.read_excel(xls, header=1)
+                other_sheets = {sheet_name: pd.read_excel(xls, sheet_name) for sheet_name in xls.sheet_names[1:]}
 
-        last_week_df = pd.read_excel(last_week_file, header=0)
-        active_supplier_contracts_df = pd.read_excel(active_supplier_contracts_file, header=1)
+            last_week_df = pd.read_excel(last_week_file, header=0)
+            active_supplier_contracts_df = pd.read_excel(active_supplier_contracts_file, header=1)
 
-        # Checking whether 'IPN' is in each DataFrame's columns
-        print('IPN' in this_week_df.columns)
-        print('IPN' in last_week_df.columns)
-        print('IPN' in active_supplier_contracts_df.columns)
+            # Merge this week's file and last week's file first, then merge that with the active supplier contracts file
+            # Based on the 'IPN' column
+            merged_df = pd.merge(this_week_df, last_week_df, on='IPN', how='outer',
+                                 suffixes=('_this_week', '_last_week'))
+            final_df = pd.merge(merged_df, active_supplier_contracts_df, on='IPN', how='left')
 
-        # Merge this week's file and last week's file first, then merge that with the active supplier contracts file
-        # Based on the 'IPN' column
-        merged_df = pd.merge(this_week_df, last_week_df, on='IPN', how='outer', suffixes=('_this_week', '_last_week'))
-        final_df = pd.merge(merged_df, active_supplier_contracts_df, on='IPN', how='left')
+            # Define a function to identify price changes
+            def price_changed(row):
+                if pd.isnull(row['Price_this_week']) or pd.isnull(row['Price_last_week']):
+                    return 'N'
+                return 'Y' if row['Price_this_week'] != row['Price_last_week'] else 'N'
 
-        # Define a function to identify price changes
-        def price_changed(row):
-            if pd.isnull(row['Price_this_week']) or pd.isnull(row['Price_last_week']):
-                return 'N'
-            return 'Y' if row['Price_this_week'] != row['Price_last_week'] else 'N'
+            # Add 'Price Change This Week' column
+            final_df['Price Change This Week'] = final_df.apply(price_changed, axis=1)
 
-        # Add 'Price Change This Week' column
-        final_df['Price Change This Week'] = final_df.apply(price_changed, axis=1)
+            # Ask the user for the output file path
+            output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
 
-        # Ask the user for the output file path
-        output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
+            # Write the data to a new Excel file
+            if output_file:
+                with pd.ExcelWriter(output_file) as writer:
+                    final_df.to_excel(writer, index=False, sheet_name='Merged Data')
+                    for sheet_name, df in other_sheets.items():
+                        df.to_excel(writer, index=False, sheet_name=sheet_name)
 
-        # Write the data to a new Excel file
-        if output_file:
-            with pd.ExcelWriter(output_file) as writer:
-                final_df.to_excel(writer, index=False, sheet_name='Merged Data')
-                for sheet_name, df in other_sheets.items():
-                    df.to_excel(writer, index=False, sheet_name=sheet_name)
+                # Display a success message in a message box
+                messagebox.showinfo("Success!", "The output file has been saved as: " + output_file)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     @staticmethod
     def select_file():
