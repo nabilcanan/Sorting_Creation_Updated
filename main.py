@@ -35,7 +35,7 @@ class ExcelSorter:
         # Configure the canvas to expand and fill the window
         self.canvas.pack(side="left", fill="both", expand=True, padx=20, pady=20)
 
-        # Canvas - Scrollbar 
+        # Canvas - Scrollbar
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         self.scrollbar.configure(command=self.canvas.yview)
 
@@ -74,7 +74,7 @@ class ExcelSorter:
         style.configure("TButton", background="white")  # Change the button background color to white
 
         title_label = ttk.Label(frame, text="Welcome Partnership Member!",
-                                font=("Arial", 36, "underline"), background="white")
+                                font=("Arial", 32, "underline"), background="white")
         title_label.pack(pady=10)
 
         description_label = ttk.Label(frame,
@@ -198,16 +198,44 @@ class ExcelSorter:
             # Read the data from files
             with pd.ExcelFile(this_week_file) as xls:
                 this_week_df = pd.read_excel(xls, header=1)
+                lost_items_df = pd.read_excel(xls, 'Lost Items')
                 other_sheets = {sheet_name: pd.read_excel(xls, sheet_name) for sheet_name in xls.sheet_names[1:]}
+
+            # Ensure IPN is a string and trimmed and in upper case
+            this_week_df['IPN'] = this_week_df['IPN'].astype(str).str.strip().str.upper()
+
+            # Remove leading zeros
+            this_week_df['IPN'] = this_week_df['IPN'].str.lstrip('0')
+
+            lost_items_df['IPN'] = lost_items_df['IPN'].astype(str).str.strip().str.upper()
+            # Remove leading zeros
+            lost_items_df['IPN'] = lost_items_df['IPN'].str.lstrip('0')
 
             last_week_df = pd.read_excel(last_week_file, header=0)
             active_supplier_contracts_df = pd.read_excel(active_supplier_contracts_file, header=1)
+
+            # Ensure IPN is a string and trimmed and in upper case
+            this_week_df['IPN'] = this_week_df['IPN'].astype(str).str.strip().str.upper()
+            last_week_df['IPN'] = last_week_df['IPN'].astype(str).str.strip().str.upper()
+            active_supplier_contracts_df['IPN'] = active_supplier_contracts_df['IPN'].astype(
+                str).str.strip().str.upper()
+            lost_items_df['IPN'] = lost_items_df['IPN'].astype(str).str.strip().str.upper()
+
+            # Get a list of IPNs of lost items
+            lost_ipns = lost_items_df['IPN'].tolist()
+
+            print('Lost IPNs:', lost_ipns)
 
             # Merge this week's file and last week's file first, then merge that with the active supplier contracts file
             # Based on the 'IPN' column
             merged_df = pd.merge(this_week_df, last_week_df, on='IPN', how='outer',
                                  suffixes=('_this_week', '_last_week'))
             final_df = pd.merge(merged_df, active_supplier_contracts_df, on='IPN', how='left')
+
+            # Filter out lost items from final dataframe
+            final_df = final_df[~final_df['IPN'].isin(lost_ipns)]
+
+            print('Final dataframe IPNs:', final_df['IPN'].tolist())
 
             # Define a function to identify price changes
             def price_changed(row):
@@ -229,7 +257,8 @@ class ExcelSorter:
                         df.to_excel(writer, index=False, sheet_name=sheet_name)
 
                 # Display a success message in a message box
-                messagebox.showinfo("Success! Your VLOOKUP was completed.", "The output file has been saved as: " + output_file)
+                messagebox.showinfo("Success! Your VLOOKUP was completed.",
+                                    "The output file has been saved as: " + output_file)
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
