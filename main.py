@@ -201,41 +201,28 @@ class ExcelSorter:
                 lost_items_df = pd.read_excel(xls, 'Lost Items')
                 other_sheets = {sheet_name: pd.read_excel(xls, sheet_name) for sheet_name in xls.sheet_names[1:]}
 
-            # Ensure IPN is a string and trimmed and in upper case
-            this_week_df['IPN'] = this_week_df['IPN'].astype(str).str.strip().str.upper()
-
-            # Remove leading zeros
-            this_week_df['IPN'] = this_week_df['IPN'].str.lstrip('0')
-
-            lost_items_df['IPN'] = lost_items_df['IPN'].astype(str).str.strip().str.upper()
-            # Remove leading zeros
-            lost_items_df['IPN'] = lost_items_df['IPN'].str.lstrip('0')
-
             last_week_df = pd.read_excel(last_week_file, header=0)
             active_supplier_contracts_df = pd.read_excel(active_supplier_contracts_file, header=1)
 
-            # Ensure IPN is a string and trimmed and in upper case
-            this_week_df['IPN'] = this_week_df['IPN'].astype(str).str.strip().str.upper()
-            last_week_df['IPN'] = last_week_df['IPN'].astype(str).str.strip().str.upper()
+            # Ensure IPN is a string, trimmed, in upper case and remove leading zeros
+            this_week_df['IPN'] = this_week_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
+            last_week_df['IPN'] = last_week_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
             active_supplier_contracts_df['IPN'] = active_supplier_contracts_df['IPN'].astype(
-                str).str.strip().str.upper()
+                str).str.strip().str.upper().str.lstrip('0')
             lost_items_df['IPN'] = lost_items_df['IPN'].astype(str).str.strip().str.upper()
 
-            # Get a list of IPNs of lost items
+            # Exclude the lost items from this_week_df, last_week_df and active_supplier_contracts_df
             lost_ipns = lost_items_df['IPN'].tolist()
-
-            print('Lost IPNs:', lost_ipns)
+            this_week_df = this_week_df[~this_week_df['IPN'].isin(lost_ipns)]
+            last_week_df = last_week_df[~last_week_df['IPN'].isin(lost_ipns)]
+            active_supplier_contracts_df = active_supplier_contracts_df[
+                ~active_supplier_contracts_df['IPN'].isin(lost_ipns)]
 
             # Merge this week's file and last week's file first, then merge that with the active supplier contracts file
             # Based on the 'IPN' column
             merged_df = pd.merge(this_week_df, last_week_df, on='IPN', how='outer',
                                  suffixes=('_this_week', '_last_week'))
             final_df = pd.merge(merged_df, active_supplier_contracts_df, on='IPN', how='left')
-
-            # Filter out lost items from final dataframe
-            final_df = final_df[~final_df['IPN'].isin(lost_ipns)]
-
-            print('Final dataframe IPNs:', final_df['IPN'].tolist())
 
             # Define a function to identify price changes
             def price_changed(row):
