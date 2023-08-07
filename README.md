@@ -45,8 +45,11 @@ For the vlookup button select in this order
 2. select current week file 
 3. save wherever you want 
 
+There is a video on this program working step by step in the images-video folder, to access just clock the folder in the repository, then clock the video (mkv file) and select 'view raw'
+This will download the video for you to view.
+
 Please ensure that you have the necessary dependencies installed before running the program. Refer to the "Requirements" section for details.
 
 For any issues or questions, please contact Nabil Canan.
 
-![Logo](images/Sager-logo.png)
+![Logo](images-videos/Sager-logo.png)
