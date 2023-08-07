@@ -40,8 +40,6 @@ For the **Merge Files and Create 'Lost Items' Sheet button** select the files in
 7. vpc
 8. running file 
 
-The process should display a completed button after 
-
 For the vlookup button select in this order 
 1. select last week's file
 2. select current week file 
