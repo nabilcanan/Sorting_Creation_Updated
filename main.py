@@ -1,5 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+
+import numpy as np
 import pandas as pd
 from PIL import ImageTk, Image
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -192,48 +194,61 @@ class ExcelSorter:
     @staticmethod
     def perform_vlookup():
         # Ask the user for the file paths
+        last_week_file = filedialog.askopenfilename(title="Select last week's contract file")
         this_week_file = filedialog.askopenfilename(title="Select current week contract file")
-        last_week_file = filedialog.askopenfilename(title="Select last week's contract contract file")
-        active_supplier_contracts_file = filedialog.askopenfilename(title="Select active supplier contracts file")
 
         try:
             # Read the data from files
             with pd.ExcelFile(this_week_file) as xls:
                 this_week_df = pd.read_excel(xls, header=1)
-                lost_items_df = pd.read_excel(xls, 'Lost Items')
                 other_sheets = {sheet_name: pd.read_excel(xls, sheet_name) for sheet_name in xls.sheet_names[1:]}
-
             last_week_df = pd.read_excel(last_week_file, header=0)
-            active_supplier_contracts_df = pd.read_excel(active_supplier_contracts_file, header=1)
+
+            # Define the columns to bring in from last week's file
+            columns_to_bring = ["IPN", "Price", "GP%", "Cost", "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
+                                "Prev Contract MPN",
+                                "Prev Contract Price",
+                                "MPN Match", "Price Match MPN", "LAST WEEK Contract Change", "Contract Change",
+                                "PSoft Part",
+                                "count",
+                                "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?", "PS Award Price",
+                                "PS Award Exp Date",
+                                "PS Awd Cust ID",
+                                "Price Match Award", "Corp Awd Loaded", "Review Note", "90 DAY PI - NEW PRICE",
+                                "PI SENT DATE",
+                                "DIFF Price Increase",
+                                "PI EFF DATE", "12 Month CPN Sales", "DIFF LW", "LW Cost", "LW Cost Note",
+                                "LW Cost Exp Date",
+                                "LW Review Note", "Estimated $ Value",
+                                "Estimated Cost$", "Estimated GP$", "GL-Interconnect Qte - Feb (Y/N)",
+                                "DS-Battery Qte - Mar (Y/N)",
+                                "Part Class", "Sager Stock",
+                                "Cost to Use 1", "Resale 1", "Price Match", "Sager Min", "Min Match",
+                                "New Special Cost",
+                                "Internal Comments", "New Special Quote#",
+                                "SP Exp Date", "Gil Rev Price", "Gil Rev Margin", "Gil Rev MOQ", "Gil Rev SPQ",
+                                "Gil Rev Price Match", "Price OK", "Min OK",
+                                "BOM COMMENT", "Status", "Assigned"]
+
+            # Reduce last_week_df to only the columns to bring
+            last_week_df = last_week_df[columns_to_bring]
 
             # Ensure IPN is a string, trimmed, in upper case and remove leading zeros
             this_week_df['IPN'] = this_week_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
             last_week_df['IPN'] = last_week_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
-            active_supplier_contracts_df['IPN'] = active_supplier_contracts_df['IPN'].astype(
-                str).str.strip().str.upper().str.lstrip('0')
-            lost_items_df['IPN'] = lost_items_df['IPN'].astype(str).str.strip().str.upper()
 
-            # Exclude the lost items from this_week_df, last_week_df and active_supplier_contracts_df
-            lost_ipns = lost_items_df['IPN'].tolist()
-            this_week_df = this_week_df[~this_week_df['IPN'].isin(lost_ipns)]
-            last_week_df = last_week_df[~last_week_df['IPN'].isin(lost_ipns)]
-            active_supplier_contracts_df = active_supplier_contracts_df[
-                ~active_supplier_contracts_df['IPN'].isin(lost_ipns)]
+            # Merge this week's file with the selected columns from last week's file based on 'IPN'
+            final_df = pd.merge(this_week_df, last_week_df, on='IPN', how='left', suffixes=('_this_week', '_last_week'))
 
-            # Merge this week's file and last week's file first, then merge that with the active supplier contracts file
-            # Based on the 'IPN' column
-            merged_df = pd.merge(this_week_df, last_week_df, on='IPN', how='outer',
-                                 suffixes=('_this_week', '_last_week'))
-            final_df = pd.merge(merged_df, active_supplier_contracts_df, on='IPN', how='left')
-
-            # Define a function to identify price changes
-            def price_changed(row):
-                if pd.isnull(row['Price_this_week']) or pd.isnull(row['Price_last_week']):
-                    return 'N'
-                return 'Y' if row['Price_this_week'] != row['Price_last_week'] else 'N'
-
-            # Add 'Price Change This Week' column
-            final_df['Price Change This Week'] = final_df.apply(price_changed, axis=1)
+            # Update 'Contract Change' based on the comparison between this week's and last week's 'Price'
+            final_df['Contract Change'] = np.where(final_df['Price_this_week'] > final_df['Price_last_week'],
+                                                   'Price Increase',
+                                                   np.where(final_df['Price_this_week'] < final_df['Price_last_week'],
+                                                            'Price Decrease',
+                                                            np.where(final_df['Price_this_week'] == final_df[
+                                                                'Price_last_week'], 'No Change',
+                                                                     np.where(pd.isna(final_df['Price_last_week']),
+                                                                              'New Item', 'No Change'))))
 
             # Ask the user for the output file path
             output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
@@ -245,9 +260,9 @@ class ExcelSorter:
                     for sheet_name, df in other_sheets.items():
                         df.to_excel(writer, index=False, sheet_name=sheet_name)
 
-                # Display a success message in a message box
-                messagebox.showinfo("Success! Your VLOOKUP was completed.",
-                                    "The output file has been saved as: " + output_file)
+            # Display a success message in a message box
+            messagebox.showinfo("Success! Your VLOOKUP was completed.",
+                                "The output file has been saved as: " + output_file)
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
