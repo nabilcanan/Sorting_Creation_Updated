@@ -151,7 +151,7 @@ class ExcelSorter:
         logo_label = ttk.Label(frame, background="white")
         logo_label.pack(pady=10)
 
-        logo_image = Image.open('images/Sager-logo.png')
+        logo_image = Image.open('images-videos/Sager-logo.png')
         logo_image = ImageTk.PhotoImage(logo_image)
         logo_label.config(image=logo_image)
         logo_label.image = logo_image
