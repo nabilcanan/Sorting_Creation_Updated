@@ -187,6 +187,8 @@ class ExcelSorter:
     def browse_files(self):
         self.filename = filedialog.askopenfilename()
 
+    "vlookup not brining in the columns correctly with their matching data to their corresponding IPNS, must fix"
+
     @staticmethod
     def perform_vlookup():
         # Ask the user for the file paths

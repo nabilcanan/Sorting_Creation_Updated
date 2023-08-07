@@ -38,6 +38,29 @@ The "Partnership Sort Creation" program is designed to sort the creation files f
 3. The program will automatically perform the operations and save the resulting files.
 
 
+For the merge files and do the lost items sheet select in this order
+1. current week
+2. last week
+3. awards
+4. backlog
+5. sales
+6. snd
+7. vpc
+8. running file 
+
+The process should display a completed button after 
+
+
+
+For the vlookup button select in this order 
+1. current week
+2. last week
+3. current week
+4. save wherever you want 
+
+
+
+
 
 Please ensure that you have the necessary dependencies installed before running the program. Refer to the "Requirements" section for details.
 
