@@ -14,31 +14,23 @@ The "Partnership Sort Creation" program is designed to sort the creation files f
 
 ## Functionality
 
-1. Sorting Creation Files:
+1. Sorting Creation Files(Sort Awards, Backlog, Sales History, etc):
    - The program allows you to sort different types of creation files, such as Award, Backlog, Sales History, SND, and VPC files.
-   - Sorting is performed based on columns we need sorted
+   - Sorting is performed based on columns we need sorted that was in our Creation Instructions.
    - The sorted files are saved within the same file.
 
-2. Adding Files to Active Contract File:
+2. Adding Files to Active Contract File (Merge and Create 'Lost Items' Sheet):
    - The program facilitates merging multiple files into the Active Contract File.
    - The files include the Active Supplier Contracts, Prev Contract, Awards, Backlog, Sales History, SND, and VPC files.
    - The program adds these files as separate sheets in the Active Contract File.
    - Additionally, it identifies and creates a "Lost Items" sheet that shows missing items from the previous to the active contract.
 
-3. Updating Active Contract File with Previous Contract Information:
-   - The program retrieves the previous contract file and copies the data into a new sheet named "Prev Contract" in the Active Contract File.
-   - It then performs data operations to match the IPNs from the previous and active contracts.
-   - The program adds the columns from the previous contract to the Active Supplier Contracts sheet, filling in the corresponding data for matching IPNs.
-   - The merged data is saved in the Active Contract File.
+3. Updating Active Contract File with VLOOK-UP Function:
+   - This button will take last week's file, and this newly created sheet with the Lost Items (our current week's file) and perform a Vlook-Up, that will bring in the columns we need from Prev Contract
+   - Once this is complete you can choose to save the file into a new workbook or save into the existing one where everything was merged 
 
-## How to Use
-
-1. Run the program and select the desired file to perform sorting or merging operations.
-2. Follow the prompts and select the appropriate options to sort or merge the files.
-3. The program will automatically perform the operations and save the resulting files.
-
-
-For the merge files and do the lost items sheet select in this order
+   
+For the **Merge Files and Create 'Lost Items' Sheet button** select the files in this order:
 1. current week
 2. last week
 3. awards
@@ -50,17 +42,10 @@ For the merge files and do the lost items sheet select in this order
 
 The process should display a completed button after 
 
-
-
 For the vlookup button select in this order 
-1. current week
-2. last week
-3. current week
-4. save wherever you want 
-
-
-
-
+1. select last week's file
+2. select current week file 
+3. save wherever you want 
 
 Please ensure that you have the necessary dependencies installed before running the program. Refer to the "Requirements" section for details.
 

@@ -15,7 +15,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files For Contract")
         self.window.configure(bg="white")
-        self.window.geometry("1000x600")
+        self.window.geometry("940x600")
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -66,6 +66,11 @@ class ExcelSorter:
                              "BOM COMMENT", "Status", "Assigned"]
         self.columns_length = len(self.column_names)  # Calculate the columns_length here
         self.create_widgets(self.inner_frame)
+        self.window.configure(bg="white")  # set the background color of the window to white
+        style = ttk.Style()
+        style.configure("TFrame", background="white")  # set the background color of ttk.Frame to white
+
+        self.inner_frame = ttk.Frame(self.canvas, style="TFrame")  # create the inner frame with the updated style
 
     def create_widgets(self, frame):
         style = ttk.Style()
@@ -106,10 +111,12 @@ class ExcelSorter:
 
         add_instructions_for_active_contracts_file = ttk.Label(
             frame,
-            text="This last button will allow you to merge your files accordingly now that they are sorted.\n"
+            text="For the 'Merge Files and Create 'Lost Items' Sheet' button will allow you to merge \n"
+                 "your files accordingly now that they are sorted.\n"
                  "Order to Select Files:\n 1. Current Contract\n "
-                 "2. Previous Weeks Contract\n 3. Awards File, 4. Backlog File\n "
-                 "5. Sales History File\n 6. SND File, 7. VPC File\n  8. Finally Running File",
+                 "2. Previous Weeks Contract\n 3. Awards File 4. Backlog File\n "
+                 "5. Sales History File\n 6. SND File 7. VPC File\n  8. Finally Running File\n"
+                 "You will get a success message at the end",
             font=("Arial", 18),
             background="white",
             anchor="center",
@@ -122,7 +129,22 @@ class ExcelSorter:
                                                         command=self.merge_files_and_create_lost_items, style="TButton")
         merge_and_create_lost_items_button.pack(pady=10)
 
-        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOKUP for Current Weeks Contract",
+        new_instructions = ttk.Label(
+            frame,
+            text="For the 'Perform VLOOKUP' button \n"
+                 "Select the Files in this Order:\n"
+                 "1. Last Weeks Contract\n"
+                 "2. This Weeks Contract (The workbook with everything merged)\n"
+                 "3. Finally it will ask where you want to save the file.",
+            font=("Arial", 18),
+            background="white",
+            anchor="center",
+            justify="center",
+            wraplength=1000
+        )
+        new_instructions.pack(pady=10)
+
+        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOKUP",
                                             command=self.perform_vlookup, style="TButton")
         perform_vlookup_button.pack(pady=10)
 
