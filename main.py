@@ -221,6 +221,9 @@ class ExcelSorter:
             reference_file = filedialog.askopenfilename(title="Select the reference file")
             contract_file = filedialog.askopenfilename(title="Select the contract file")
 
+            print("Reference file selected:", reference_file)
+            print("Contract file selected:", contract_file)
+
             # Define columns to bring from the reference file
             columns_to_bring = ["IPN", "Price", "GP%", "Cost", "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
                                 "Prev Contract MPN", "Prev Contract Price", "MPN Match", "Price Match MPN",
@@ -230,15 +233,18 @@ class ExcelSorter:
                                 "90 DAY PI - NEW PRICE", "PI SENT DATE", "DIFF Price Increase", "PI EFF DATE",
                                 "12 Month CPN Sales", "DIFF LW", "LW Cost", "LW Cost Note", "LW Cost Exp Date"]
 
+            # Read the main sheet from the reference (last week's) file with headers in the 2nd row
+            reference_df = pd.read_excel(reference_file, header=1)[columns_to_bring]
+            print("\nHeaders from reference_df:")
+            print(reference_df.columns.tolist())
+
             # Read the main sheet from the contract file WITHOUT headers initially
             contract_df = pd.read_excel(contract_file, header=None)
-
-            # Rename columns using the 2nd row, then drop that row
-            contract_df.columns = contract_df.iloc[1]
-            contract_df = contract_df.drop(1).reset_index(drop=True)
-
-            # Read the main sheet from the reference (last week's) file (headers in 1st row)
-            reference_df = pd.read_excel(reference_file, header=0)[columns_to_bring]
+            headers = contract_df.iloc[0].values  # Using the 2nd row as headers
+            contract_df = contract_df[2:].reset_index(drop=True)  # Starting the data from the 3rd row
+            contract_df.columns = headers
+            print("\nHeaders from contract_df:")
+            print(contract_df.columns.tolist())
 
             # Ensure IPN is correctly formatted
             reference_df['IPN'] = reference_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
@@ -264,10 +270,11 @@ class ExcelSorter:
             with pd.ExcelFile(contract_file) as xls:
                 other_sheets = {}
                 for sheet_name in xls.sheet_names:
-                    temp_df = pd.read_excel(xls, sheet_name, header=None)  # Read without headers
-                    if temp_df.shape[0] > 1:  # Check if the sheet has more than one row
-                        other_sheets[sheet_name] = temp_df.iloc[1:].reset_index(
-                            drop=True)  # Exclude the header row and reset the index
+                    temp_df = pd.read_excel(xls, sheet_name, header=0)  # Read with headers
+                    if temp_df.shape[0] > 0 or sheet_name == "Lost Items":
+                        print("\nHeaders from", sheet_name, "sheet:")
+                        print(temp_df.columns.tolist())
+                        other_sheets[sheet_name] = temp_df
 
             # Ask the user for the output file path
             output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
