@@ -204,7 +204,8 @@ class ExcelSorter:
 
         try:
             active_award_workbook.save(active_award_file_path)
-            messagebox.showinfo("Success!", "Files merged and 'Lost Items' sheet created successfully with any missing IPN's from last week that are not in the current weeks file.")
+            messagebox.showinfo("Success!",
+                                "Files merged and 'Lost Items' sheet created successfully with any missing IPN's from last week that are not in the current weeks file.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
@@ -215,62 +216,58 @@ class ExcelSorter:
 
     @staticmethod
     def perform_vlookup():
-        # Ask the user for the file paths
-        last_week_file = filedialog.askopenfilename(title="Select last week's contract file")
-        this_week_file = filedialog.askopenfilename(title="Select current week contract file")
-
         try:
-            # Read the data from files
-            with pd.ExcelFile(this_week_file) as xls:
-                this_week_df = pd.read_excel(xls, header=1)
-                other_sheets = {sheet_name: pd.read_excel(xls, sheet_name) for sheet_name in xls.sheet_names[1:]}
-            last_week_df = pd.read_excel(last_week_file, header=0)
+            # Ask the user for the file paths
+            reference_file = filedialog.askopenfilename(title="Select the reference file")
+            contract_file = filedialog.askopenfilename(title="Select the contract file")
 
-            # Define the columns to bring in from last week's file
+            # Define columns to bring from the reference file
             columns_to_bring = ["IPN", "Price", "GP%", "Cost", "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
-                                "Prev Contract MPN",
-                                "Prev Contract Price",
-                                "MPN Match", "Price Match MPN", "LAST WEEK Contract Change", "Contract Change",
-                                "PSoft Part",
-                                "count",
-                                "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?", "PS Award Price",
-                                "PS Award Exp Date",
-                                "PS Awd Cust ID",
-                                "Price Match Award", "Corp Awd Loaded", "Review Note", "90 DAY PI - NEW PRICE",
-                                "PI SENT DATE",
-                                "DIFF Price Increase",
-                                "PI EFF DATE", "12 Month CPN Sales", "DIFF LW", "LW Cost", "LW Cost Note",
-                                "LW Cost Exp Date",
-                                "LW Review Note", "Estimated $ Value",
-                                "Estimated Cost$", "Estimated GP$", "GL-Interconnect Qte - Feb (Y/N)",
-                                "DS-Battery Qte - Mar (Y/N)",
-                                "Part Class", "Sager Stock",
-                                "Cost to Use 1", "Resale 1", "Price Match", "Sager Min", "Min Match",
-                                "New Special Cost",
-                                "Internal Comments", "New Special Quote#",
-                                "SP Exp Date", "Gil Rev Price", "Gil Rev Margin", "Gil Rev MOQ", "Gil Rev SPQ",
-                                "Gil Rev Price Match", "Price OK", "Min OK",
-                                "BOM COMMENT", "Status", "Assigned"]
+                                "Prev Contract MPN", "Prev Contract Price", "MPN Match", "Price Match MPN",
+                                "LAST WEEK Contract Change", "Contract Change", "PSoft Part", "count", "SUM", "AVG",
+                                "DIFF", "PSID All Contract Prices Same?", "PS Award Price", "PS Award Exp Date",
+                                "PS Awd Cust ID", "Price Match Award", "Corp Awd Loaded", "Review Note",
+                                "90 DAY PI - NEW PRICE", "PI SENT DATE", "DIFF Price Increase", "PI EFF DATE",
+                                "12 Month CPN Sales", "DIFF LW", "LW Cost", "LW Cost Note", "LW Cost Exp Date"]
 
-            # Reduce last_week_df to only the columns to bring
-            last_week_df = last_week_df[columns_to_bring]
+            # Read the main sheet from the contract file WITHOUT headers initially
+            contract_df = pd.read_excel(contract_file, header=None)
 
-            # Ensure IPN is a string, trimmed, in upper case and remove leading zeros
-            this_week_df['IPN'] = this_week_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
-            last_week_df['IPN'] = last_week_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
+            # Rename columns using the 2nd row, then drop that row
+            contract_df.columns = contract_df.iloc[1]
+            contract_df = contract_df.drop(1).reset_index(drop=True)
 
-            # Merge this week's file with the selected columns from last week's file based on 'IPN'
-            final_df = pd.merge(this_week_df, last_week_df, on='IPN', how='left', suffixes=('_this_week', '_last_week'))
+            # Read the main sheet from the reference (last week's) file (headers in 1st row)
+            reference_df = pd.read_excel(reference_file, header=0)[columns_to_bring]
 
-            # Update 'Contract Change' based on the comparison between this week's and last week's 'Price'
-            final_df['Contract Change'] = np.where(final_df['Price_this_week'] > final_df['Price_last_week'],
-                                                   'Price Increase',
-                                                   np.where(final_df['Price_this_week'] < final_df['Price_last_week'],
+            # Ensure IPN is correctly formatted
+            reference_df['IPN'] = reference_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
+            contract_df['IPN'] = contract_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
+
+            # Merge the DataFrames
+            final_df = pd.merge(contract_df, reference_df, on='IPN', how='left', suffixes=('', '_ref'))
+
+            # Check for Price_ref column and rename
+            if 'Price_ref' in final_df.columns:
+                final_df.rename(columns={'Price_ref': 'Last_File_Price'}, inplace=True)
+
+            # Compute 'Contract Change' column
+            final_df['Contract Change'] = np.where(final_df['Price'] > final_df['Last_File_Price'], 'Price Increase',
+                                                   np.where(final_df['Price'] < final_df['Last_File_Price'],
                                                             'Price Decrease',
-                                                            np.where(final_df['Price_this_week'] == final_df[
-                                                                'Price_last_week'], 'No Change',
-                                                                     np.where(pd.isna(final_df['Price_last_week']),
+                                                            np.where(final_df['Price'] == final_df['Last_File_Price'],
+                                                                     'No Change',
+                                                                     np.where(pd.isna(final_df['Last_File_Price']),
                                                                               'New Item', 'No Change'))))
+
+            # Load sheets from the contract file
+            with pd.ExcelFile(contract_file) as xls:
+                other_sheets = {}
+                for sheet_name in xls.sheet_names:
+                    temp_df = pd.read_excel(xls, sheet_name, header=None)  # Read without headers
+                    if temp_df.shape[0] > 1:  # Check if the sheet has more than one row
+                        other_sheets[sheet_name] = temp_df.iloc[1:].reset_index(
+                            drop=True)  # Exclude the header row and reset the index
 
             # Ask the user for the output file path
             output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
@@ -278,13 +275,13 @@ class ExcelSorter:
             # Write the data to a new Excel file
             if output_file:
                 with pd.ExcelWriter(output_file) as writer:
-                    final_df.to_excel(writer, index=False, sheet_name='Merged Data')
+                    final_df.to_excel(writer, index=False, sheet_name='Active Supplier Contracts')
                     for sheet_name, df in other_sheets.items():
                         df.to_excel(writer, index=False, sheet_name=sheet_name)
 
-            # Display a success message in a message box
-            messagebox.showinfo("Success! Your VLOOKUP was completed.",
-                                "The output file has been saved as: " + output_file)
+                # Display a success message in a message box
+                messagebox.showinfo("Success!", "The output file has been saved as: " + output_file)
+
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
