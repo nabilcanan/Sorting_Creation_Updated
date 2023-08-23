@@ -8,6 +8,9 @@ from PIL import ImageTk, Image
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
 from tkinter import filedialog, messagebox
+import warnings
+
+warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 
 
 class ExcelSorter:
@@ -253,7 +256,10 @@ class ExcelSorter:
 
             # Load data from 'Prev File' sheet and 'Active Supplier Contracts' sheet
             reference_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0)[columns_to_bring]
+            print("Headers in reference_df:", reference_df.columns.tolist())  # Print headers of reference_df
+
             contract_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
+            print("Headers in contract_df:", contract_df.columns.tolist())  # Print headers of contract_df
 
             # # Process the IPN columns
             # reference_df['IPN'] = reference_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
@@ -264,6 +270,7 @@ class ExcelSorter:
 
             # Merge on 'IPN'
             final_df = contract_df.merge(reference_df, on='IPN', how='left', suffixes=('', '_y'))
+            print("Headers in final_df:", final_df.columns.tolist())  # Print headers of final_df
 
             # Adjust the 'Contract Change' logic
             final_df['Contract Change'] = np.where(final_df['Price'] > final_df['Prev_Resale_Price'], 'Price Increase',
