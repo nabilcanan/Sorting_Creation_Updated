@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
-
+from openpyxl.styles import PatternFill
+from openpyxl.styles import Alignment
 import numpy as np
 import pandas as pd
 from PIL import ImageTk, Image
@@ -15,7 +16,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files For Contract")
         self.window.configure(bg="white")
-        self.window.geometry("940x600")
+        self.window.geometry("940x1060")
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -81,7 +82,7 @@ class ExcelSorter:
         style.configure("TButton", background="white")  # Change the button background color to white
 
         title_label = ttk.Label(frame, text="Welcome Partnership Member!",
-                                font=("Arial", 32, "underline"), background="white")
+                                font=("Arial", 32, "underline"), background="white", foreground="#103d81")
         title_label.pack(pady=10)
 
         description_label = ttk.Label(frame,
@@ -274,9 +275,18 @@ class ExcelSorter:
                                                                               'New Item',
                                                                               'No Change'))))
 
+            # NEED TO MAKE SURE THE PRICE BEING CHECKED HERE IS FROM PREV CONTRACT TO OUR NEW ACTIVE SUPPLIER CONTRACTS
+            # SHEET BECAUSE THE PRICE IN THE NEW ACTIVE SHEET HAS CHANGED SO WE NEED TO LOOK INTO MAKING USRE THE
+            # CONTRACT CHANGE COLUMN IS TAKEN CARE OF ACCORDINGLY AND THAT IT STATES THERE WAS A PRICE CHANGE
+            # FIX THIS ASAP!
+
             # Load all sheets from the contract file
             all_sheets = pd.read_excel(contract_file, sheet_name=None)
             all_sheets['Active Supplier Contracts'] = final_df  # update this sheet with the final_df
+
+            # Remove the unwanted sheet
+            if '_SettingsCurrency' in all_sheets:
+                del all_sheets['_SettingsCurrency']
 
             # Ask the user for the output file path
             output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
@@ -286,6 +296,61 @@ class ExcelSorter:
                 with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
                     for sheet_name, df in all_sheets.items():
                         df.to_excel(writer, index=False, sheet_name=sheet_name)
+
+                    ws = writer.sheets['Active Supplier Contracts']
+
+                    # Make headers wraptext
+                    for cell in ws["1:1"]:  # This specifies the first row, which are the headers
+                        cell.alignment = Alignment(wrap_text=True)
+
+                    # Map headers to their respective colors, these will all be teal
+                    headers_to_color = {
+                        'GP%': "0000FFFF",
+                        'Cost': "0000FFFF",
+                        'Cost Note': "0000FFFF",
+                        'Quote#': "0000FFFF",
+                        'Cost Exp Date': "0000FFFF",
+                        'Cost MOQ': "0000FFFF",
+                        'IPN': "00FFFF00",
+                        'MPN': "00FFFF00",
+                        'MFG': "00FFFF00",
+                        'Customer Name': "00FFFF00",
+                        'Award Ref #': "00FFCC99",
+                        'PS CPN Award': "00FFCC99",
+                        'Product ID': "00FFCC99",
+                        'MFR': "00FFCC99",
+                        'MFR PN': "00FFCC99",
+                        'Award Price': "00FFCC99",
+                        'Release Qty': "00FFCC99",
+                        'Award EAU': "00FFCC99",
+                        'Award PO#': "00FFCC99",
+                        'Award Load Date': "00FFCC99",
+                        'Award Price Diff': "00FFCC99",
+                        'Award MOQ Diff': "00FFCC99",
+                        'Award by PSID': "00FFCC99",
+                        'Award by PSID Price': "00FFCC99",
+                        'Award by PSID CPN': "00FFCC99",
+                        'Award by PSID MOQ': "00FFCC99",
+                        'MFR.1': "00FFCC99",
+                        'MFR PN.1': "00FFCC99",
+                        'Award Price Diff.1': "00FFCC99",
+                        'Award MOQ Diff.1': "00FFCC99",
+                        'MPN Match.1': "00FFCC99",
+                        'RC': "00FFCC99",
+                        'Current Margin OK for Now?': "00008000",
+                        'PSoft Part.1': "00FFFF99",
+                        '**JUNE INT**      Quoted Mfg': "00CCFFFF",
+                        '**FEB INT QTE**                                                                   Quoted Mfg': "00CCFFFF",
+                        'AWARD LOADED': "0099CC00"
+
+                        }
+
+                    for row in ws.iter_rows(min_row=1, max_row=1):
+                        for cell in row:
+                            if cell.value in headers_to_color:
+                                fill_color = headers_to_color[cell.value]
+                                fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                                cell.fill = fill
 
                 # Display a success message in a message box
                 messagebox.showinfo("Success", "The output file has been saved as: " + output_file)
