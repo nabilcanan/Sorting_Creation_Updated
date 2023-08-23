@@ -217,77 +217,80 @@ class ExcelSorter:
     @staticmethod
     def perform_vlookup():
         try:
-            # Ask the user for the file paths
-            reference_file = filedialog.askopenfilename(title="Select the reference file")
-            contract_file = filedialog.askopenfilename(title="Select the contract file")
-
-            print("Reference file selected:", reference_file)
-            print("Contract file selected:", contract_file)
+            # Ask the user for the contract file paths
+            contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup")
 
             # Define columns to bring from the reference file
-            columns_to_bring = ["IPN", "Price", "GP%", "Cost", "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
-                                "Prev Contract MPN", "Prev Contract Price", "MPN Match", "Price Match MPN",
-                                "LAST WEEK Contract Change", "Contract Change", "PSoft Part", "count", "SUM", "AVG",
-                                "DIFF", "PSID All Contract Prices Same?", "PS Award Price", "PS Award Exp Date",
-                                "PS Awd Cust ID", "Price Match Award", "Corp Awd Loaded", "Review Note",
-                                "90 DAY PI - NEW PRICE", "PI SENT DATE", "DIFF Price Increase", "PI EFF DATE",
-                                "12 Month CPN Sales", "DIFF LW", "LW Cost", "LW Cost Note", "LW Cost Exp Date"]
+            columns_to_bring = [
+                "IPN", "Prev Contract MPN", "Prev Contract Price", "MPN Match", "Price Match MPN",
+                "LAST WEEK Contract Change", "Contract Change", "PSoft Part", "count",
+                "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
+                "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
+                "Corp Awd Loaded", "Review Note", "90 DAY PI - NEW PRICE", "PI SENT DATE",
+                "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
+                "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "DIFF LW", "LW Cost",
+                "LW Cost Note", "LW Cost Exp Date", "LW Review Note", "Estimated $ Value",
+                "Estimated Cost$", "Estimated GP$", "GL-Interconnect Qte - Feb (Y/N)",
+                "DS-Battery Qte - Mar (Y/N)", "Part Class", "Sager Stock", "Cost to Use 1",
+                "Resale 1", "Price Match", "Sager Min", "Min Match", "New Special Cost",
+                "Internal Comments", "New Special Quote#", "SP Exp Date", "Unnamed: 80",
+                "Gil Rev Price", "Gil Rev Margin", "Gil Rev MOQ", "Gil Rev SPQ", "Gil Rev Price Match",
+                "Price OK", "Min OK", "BOM COMMENT", "Status", "Award Ref #", "PS CPN Award",
+                "Product ID", "MFR", "MFR PN", "Award Price", "Release Qty", "Award EAU",
+                "Award PO#", "Award Load Date", "Award Price Diff", "Award MOQ Diff", "Award by PSID",
+                "Award by PSID Price", "Award by PSID CPN", "Award by PSID MOQ", "MFR.1", "MFR PN.1",
+                "Award Price Diff.1", "Award MOQ Diff.1", "MPN Match.1", "RC", "xxx",
+                "Current Margin OK for Now?", "PSoft Part.1", "PSID CT", "X", "Quoted Mfg",
+                "Quoted Part", "Part Class.1", "**JUNE INT**      Quoted Mfg", "Quoted Part.1",
+                "Resale 1.1", "Sager Min.1", "Sager Mult", "Sager NCNR", "Customer Comments",
+                "QTE SAME AS CT", "QTE MOQ SAME AS CT", "QTE SPQ SAME AS CT", "PRICE DIFF CURR PS AWARD",
+                "AWARD LOADED", "PSoft Part.2", "Last Price Quoted", "Qty Quoted", "Date Quoted",
+                "**FEB INT QTE**                                                                   Quoted Mfg",
+                "Quoted Part.2", "Qtd Price", "Qtd MOQ", "Qtd SPQ", "NCNR.1", "PSoft Part.3",
+                "Feb Qte Price Diff", "Feb Qte MOQ Diff", "Unnamed: 145", "8/14 PS Award CPN",
+                "8/14 PS Award PSID", "8/14 PS Award Price", "8/14 PS Award MOQ", "8/14 PS Award Name",
+                "Price Diff", "MOQ Diff", "8/14 PS Award End Date"
+            ]
 
-            # Read the main sheet from the reference (last week's) file with headers in the 2nd row
-            reference_df = pd.read_excel(reference_file, header=1)[columns_to_bring]
-            print("\nHeaders from reference_df:")
-            print(reference_df.columns.tolist())
+            # Load data from 'Prev File' sheet and 'Active Supplier Contracts' sheet
+            reference_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0)[columns_to_bring]
+            contract_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
 
-            # Read the main sheet from the contract file WITHOUT headers initially
-            contract_df = pd.read_excel(contract_file, header=None)
-            headers = contract_df.iloc[0].values  # Using the 2nd row as headers
-            contract_df = contract_df[2:].reset_index(drop=True)  # Starting the data from the 3rd row
-            contract_df.columns = headers
-            print("\nHeaders from contract_df:")
-            print(contract_df.columns.tolist())
+            # # Process the IPN columns
+            # reference_df['IPN'] = reference_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
+            # contract_df['IPN'] = contract_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
 
-            # Ensure IPN is correctly formatted
-            reference_df['IPN'] = reference_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
-            contract_df['IPN'] = contract_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
+            # Rename the 'Price' column from reference_df
+            reference_df = reference_df.rename(columns={'Prev Contract Price': 'Prev_Resale_Price'})
 
-            # Merge the DataFrames
-            final_df = pd.merge(contract_df, reference_df, on='IPN', how='left', suffixes=('', '_ref'))
+            # Merge on 'IPN'
+            final_df = contract_df.merge(reference_df, on='IPN', how='left', suffixes=('', '_y'))
 
-            # Check for Price_ref column and rename
-            if 'Price_ref' in final_df.columns:
-                final_df.rename(columns={'Price_ref': 'Last_File_Price'}, inplace=True)
-
-            # Compute 'Contract Change' column
-            final_df['Contract Change'] = np.where(final_df['Price'] > final_df['Last_File_Price'], 'Price Increase',
-                                                   np.where(final_df['Price'] < final_df['Last_File_Price'],
+            # Adjust the 'Contract Change' logic
+            final_df['Contract Change'] = np.where(final_df['Price'] > final_df['Prev_Resale_Price'], 'Price Increase',
+                                                   np.where(final_df['Price'] < final_df['Prev_Resale_Price'],
                                                             'Price Decrease',
-                                                            np.where(final_df['Price'] == final_df['Last_File_Price'],
+                                                            np.where(final_df['Price'] == final_df['Prev_Resale_Price'],
                                                                      'No Change',
-                                                                     np.where(pd.isna(final_df['Last_File_Price']),
-                                                                              'New Item', 'No Change'))))
+                                                                     np.where(pd.isna(final_df['Prev_Resale_Price']),
+                                                                              'New Item',
+                                                                              'No Change'))))
 
-            # Load sheets from the contract file
-            with pd.ExcelFile(contract_file) as xls:
-                other_sheets = {}
-                for sheet_name in xls.sheet_names:
-                    temp_df = pd.read_excel(xls, sheet_name, header=0)  # Read with headers
-                    if temp_df.shape[0] > 0 or sheet_name == "Lost Items":
-                        print("\nHeaders from", sheet_name, "sheet:")
-                        print(temp_df.columns.tolist())
-                        other_sheets[sheet_name] = temp_df
+            # Load all sheets from the contract file
+            all_sheets = pd.read_excel(contract_file, sheet_name=None)
+            all_sheets['Active Supplier Contracts'] = final_df  # update this sheet with the final_df
 
             # Ask the user for the output file path
             output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
 
             # Write the data to a new Excel file
             if output_file:
-                with pd.ExcelWriter(output_file) as writer:
-                    final_df.to_excel(writer, index=False, sheet_name='Active Supplier Contracts')
-                    for sheet_name, df in other_sheets.items():
+                with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+                    for sheet_name, df in all_sheets.items():
                         df.to_excel(writer, index=False, sheet_name=sheet_name)
 
                 # Display a success message in a message box
-                messagebox.showinfo("Success!", "The output file has been saved as: " + output_file)
+                messagebox.showinfo("Success", "The output file has been saved as: " + output_file)
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
