@@ -137,7 +137,7 @@ class ExcelSorter:
             frame,
             text="For the 'Perform VLOOKUP' button \n"
                  "Select the File where you need a Vlookup Completed:\n"
-                 "1. Current Active Supplier Contracts File with Data Merged\n",
+                 "1. Current Active Supplier Contracts File with Data Merged from Prev Button\n",
             font=("Arial", 18),
             background="white",
             anchor="center",
