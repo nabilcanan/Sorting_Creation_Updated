@@ -132,10 +132,8 @@ class ExcelSorter:
         new_instructions = ttk.Label(
             frame,
             text="For the 'Perform VLOOKUP' button \n"
-                 "Select the Files in this Order:\n"
-                 "1. Last Weeks Contract\n"
-                 "2. This Weeks Contract (The workbook with everything merged)\n"
-                 "3. Finally it will ask where you want to save the file.",
+                 "Select the File where you need a Vlookup Completed:\n"
+                 "1. Current Active Supplier Contracts File with Data Merged\n",
             font=("Arial", 18),
             background="white",
             anchor="center",
