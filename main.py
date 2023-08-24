@@ -19,7 +19,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files For Contract")
         self.window.configure(bg="white")
-        self.window.geometry("940x1060")
+        self.window.geometry("940x1060") # Usually 600 for normal wundow size 
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
