@@ -19,7 +19,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files For Contract")
         self.window.configure(bg="white")
-        self.window.geometry("940x1060") # Usually 600 for normal wundow size 
+        self.window.geometry("940x1060") # Usually 600 for normal wundow size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -224,35 +224,14 @@ class ExcelSorter:
 
             # Define columns to bring from the reference file
             columns_to_bring = [
-                "IPN", "Prev Contract MPN", "Prev Contract Price", "MPN Match", "Price Match MPN",
+                "IPN", "Price", "Prev Contract MPN", "Prev Contract Price", "MPN Match", "Price Match MPN",
                 "LAST WEEK Contract Change", "Contract Change", "PSoft Part", "count",
                 "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
                 "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
-                "Corp Awd Loaded", "Review Note", "90 DAY PI - NEW PRICE", "PI SENT DATE",
+                "Corp Awd Loaded", "90 DAY PI - NEW PRICE", "PI SENT DATE",
                 "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
                 "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "DIFF LW", "LW Cost",
-                "LW Cost Note", "LW Cost Exp Date", "LW Review Note", "Estimated $ Value",
-                "Estimated Cost$", "Estimated GP$", "GL-Interconnect Qte - Feb (Y/N)",
-                "DS-Battery Qte - Mar (Y/N)", "Part Class", "Sager Stock", "Cost to Use 1",
-                "Resale 1", "Price Match", "Sager Min", "Min Match", "New Special Cost",
-                "Internal Comments", "New Special Quote#", "SP Exp Date", "Unnamed: 80",
-                "Gil Rev Price", "Gil Rev Margin", "Gil Rev MOQ", "Gil Rev SPQ", "Gil Rev Price Match",
-                "Price OK", "Min OK", "BOM COMMENT", "Status", "Award Ref #", "PS CPN Award",
-                "Product ID", "MFR", "MFR PN", "Award Price", "Release Qty", "Award EAU",
-                "Award PO#", "Award Load Date", "Award Price Diff", "Award MOQ Diff", "Award by PSID",
-                "Award by PSID Price", "Award by PSID CPN", "Award by PSID MOQ", "MFR.1", "MFR PN.1",
-                "Award Price Diff.1", "Award MOQ Diff.1", "MPN Match.1", "RC", "xxx",
-                "Current Margin OK for Now?", "PSoft Part.1", "PSID CT", "X", "Quoted Mfg",
-                "Quoted Part", "Part Class.1", "**JUNE INT**      Quoted Mfg", "Quoted Part.1",
-                "Resale 1.1", "Sager Min.1", "Sager Mult", "Sager NCNR", "Customer Comments",
-                "QTE SAME AS CT", "QTE MOQ SAME AS CT", "QTE SPQ SAME AS CT", "PRICE DIFF CURR PS AWARD",
-                "AWARD LOADED", "PSoft Part.2", "Last Price Quoted", "Qty Quoted", "Date Quoted",
-                "**FEB INT QTE**                                                                   Quoted Mfg",
-                "Quoted Part.2", "Qtd Price", "Qtd MOQ", "Qtd SPQ", "NCNR.1", "PSoft Part.3",
-                "Feb Qte Price Diff", "Feb Qte MOQ Diff", "Unnamed: 145", "8/14 PS Award CPN",
-                "8/14 PS Award PSID", "8/14 PS Award Price", "8/14 PS Award MOQ", "8/14 PS Award Name",
-                "Price Diff", "MOQ Diff", "8/14 PS Award End Date"
-            ]
+                "LW Cost Note", "LW Cost Exp Date", "Review Note"]
 
             # Load data from 'Prev File' sheet and 'Active Supplier Contracts' sheet
             reference_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0)[columns_to_bring]
@@ -261,10 +240,6 @@ class ExcelSorter:
             contract_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
             print("Headers in contract_df:", contract_df.columns.tolist())  # Print headers of contract_df
 
-            # # Process the IPN columns
-            # reference_df['IPN'] = reference_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
-            # contract_df['IPN'] = contract_df['IPN'].astype(str).str.strip().str.upper().str.lstrip('0')
-
             # Rename the 'Price' column from reference_df
             reference_df = reference_df.rename(columns={'Prev Contract Price': 'Prev_Resale_Price'})
 
@@ -272,15 +247,16 @@ class ExcelSorter:
             final_df = contract_df.merge(reference_df, on='IPN', how='left', suffixes=('', '_y'))
             print("Headers in final_df:", final_df.columns.tolist())  # Print headers of final_df
 
-            # Adjust the 'Contract Change' logic
-            final_df['Contract Change'] = np.where(final_df['Price'] > final_df['Prev_Resale_Price'], 'Price Increase',
-                                                   np.where(final_df['Price'] < final_df['Prev_Resale_Price'],
-                                                            'Price Decrease',
-                                                            np.where(final_df['Price'] == final_df['Prev_Resale_Price'],
-                                                                     'No Change',
-                                                                     np.where(pd.isna(final_df['Prev_Resale_Price']),
-                                                                              'New Item',
-                                                                              'No Change'))))
+            tolerance = 0.0001
+
+            final_df['Contract Change'] = np.where(abs(final_df['Price'] - final_df['Price_y']) <= tolerance,
+                                                   'No Change',
+                                                   np.where(final_df['Price'] > final_df['Price_y'],
+                                                            'Price Increase',
+                                                            np.where(final_df['Price'] < final_df['Price_y'],
+                                                                     'Price Decrease',
+                                                                     np.where(pd.isna(final_df['Price_y']),
+                                                                              'New Item', 'Unknown'))))
 
             # NEED TO MAKE SURE THE PRICE BEING CHECKED HERE IS FROM PREV CONTRACT TO OUR NEW ACTIVE SUPPLIER CONTRACTS
             # SHEET BECAUSE THE PRICE IN THE NEW ACTIVE SHEET HAS CHANGED SO WE NEED TO LOOK INTO MAKING USRE THE
