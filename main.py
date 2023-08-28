@@ -19,7 +19,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files For Contract")
         self.window.configure(bg="white")
-        self.window.geometry("940x1060") # Usually 600 for normal wundow size
+        self.window.geometry("940x600") # Usually 600 for normal wundow size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -136,8 +136,8 @@ class ExcelSorter:
         new_instructions = ttk.Label(
             frame,
             text="For the 'Perform VLOOKUP' button \n"
-                 "Select the File where you need a Vlookup Completed:\n"
-                 "1. Current Active Supplier Contracts File with Data Merged from Prev Button\n",
+            "1. Select the file where you now need your vlookup completed.\n"
+            "(This is the same file where all your files are now merged.) ",
             font=("Arial", 18),
             background="white",
             anchor="center",
