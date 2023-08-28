@@ -10,6 +10,7 @@ from openpyxl import load_workbook
 from tkinter import filedialog, messagebox
 import warnings
 
+
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 
 
@@ -19,7 +20,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files For Contract")
         self.window.configure(bg="white")
-        self.window.geometry("940x600") # Usually 600 for normal wundow size
+        self.window.geometry("940x600")  # Usually 600 for normal wundow size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -32,7 +33,7 @@ class ExcelSorter:
         self.inner_frame = ttk.Frame(self.canvas)
         self.canvas.create_window((self.window.winfo_width() / 2, 0), window=self.inner_frame, anchor="n")
 
-        # Configure the canvas's scroll-region to encompass the frame
+        # Configure the canvaZs's scroll-region to encompass the frame
         self.inner_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
         # Pack the scrollbar, making sure it sticks to the right side
@@ -136,8 +137,8 @@ class ExcelSorter:
         new_instructions = ttk.Label(
             frame,
             text="For the 'Perform VLOOKUP' button \n"
-            "1. Select the file where you now need your vlookup completed.\n"
-            "(This is the same file where all your files are now merged.) ",
+                 "1. Select the file where you now need your vlookup completed.\n"
+                 "(This is the same file where all your files are now merged.) ",
             font=("Arial", 18),
             background="white",
             anchor="center",
@@ -247,6 +248,8 @@ class ExcelSorter:
             final_df = contract_df.merge(reference_df, on='IPN', how='left', suffixes=('', '_y'))
             print("Headers in final_df:", final_df.columns.tolist())  # Print headers of final_df
 
+            # final_df['GP%'] = (final_df['GP%'] * 100).astype(str) + '%'
+
             tolerance = 0.0001
 
             final_df['Contract Change'] = np.where(abs(final_df['Price'] - final_df['Price_y']) <= tolerance,
@@ -293,35 +296,7 @@ class ExcelSorter:
                         'MPN': "00FFFF00",
                         'MFG': "00FFFF00",
                         'Customer Name': "00FFFF00",
-                        'Award Ref #': "00FFCC99",
-                        'PS CPN Award': "00FFCC99",
-                        'Product ID': "00FFCC99",
-                        'MFR': "00FFCC99",
-                        'MFR PN': "00FFCC99",
-                        'Award Price': "00FFCC99",
-                        'Release Qty': "00FFCC99",
-                        'Award EAU': "00FFCC99",
-                        'Award PO#': "00FFCC99",
-                        'Award Load Date': "00FFCC99",
-                        'Award Price Diff': "00FFCC99",
-                        'Award MOQ Diff': "00FFCC99",
-                        'Award by PSID': "00FFCC99",
-                        'Award by PSID Price': "00FFCC99",
-                        'Award by PSID CPN': "00FFCC99",
-                        'Award by PSID MOQ': "00FFCC99",
-                        'MFR.1': "00FFCC99",
-                        'MFR PN.1': "00FFCC99",
-                        'Award Price Diff.1': "00FFCC99",
-                        'Award MOQ Diff.1': "00FFCC99",
-                        'MPN Match.1': "00FFCC99",
-                        'RC': "00FFCC99",
-                        'Current Margin OK for Now?': "00008000",
-                        'PSoft Part.1': "00FFFF99",
-                        '**JUNE INT**      Quoted Mfg': "00CCFFFF",
-                        '**FEB INT QTE**                                                                   Quoted Mfg': "00CCFFFF",
-                        'AWARD LOADED': "0099CC00"
-
-                        }
+                    }
 
                     for row in ws.iter_rows(min_row=1, max_row=1):
                         for cell in row:
