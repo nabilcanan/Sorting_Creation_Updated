@@ -258,11 +258,6 @@ class ExcelSorter:
                                                                      np.where(pd.isna(final_df['Price_y']),
                                                                               'New Item', 'Unknown'))))
 
-            # NEED TO MAKE SURE THE PRICE BEING CHECKED HERE IS FROM PREV CONTRACT TO OUR NEW ACTIVE SUPPLIER CONTRACTS
-            # SHEET BECAUSE THE PRICE IN THE NEW ACTIVE SHEET HAS CHANGED SO WE NEED TO LOOK INTO MAKING USRE THE
-            # CONTRACT CHANGE COLUMN IS TAKEN CARE OF ACCORDINGLY AND THAT IT STATES THERE WAS A PRICE CHANGE
-            # FIX THIS ASAP!
-
             # Load all sheets from the contract file
             all_sheets = pd.read_excel(contract_file, sheet_name=None)
             all_sheets['Active Supplier Contracts'] = final_df  # update this sheet with the final_df
