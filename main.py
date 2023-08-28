@@ -10,12 +10,14 @@ from openpyxl import load_workbook
 from tkinter import filedialog, messagebox
 import warnings
 
+# from Run_Queries import Run_Queries
 
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 
 
 class ExcelSorter:
     def __init__(self):
+        self.run_queries_class = None
         self.filename = None
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files For Contract")
@@ -94,6 +96,10 @@ class ExcelSorter:
                                            "Contact",
                                       font=("Arial", 16, "underline"), background="white")
         description_label.pack(pady=10)
+
+        # run_creation_queries = ttk.Button(frame, text="Run Queries", command=self.run_queries_class,
+        #                                   style="Tbutton")
+        # run_creation_queries.pack(pady=10)
 
         sort_award_button = ttk.Button(frame, text="Sort Award File", command=self.sort_award_file,
                                        style="TButton")
