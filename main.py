@@ -49,29 +49,6 @@ class ExcelSorter:
         self.scrollbar.configure(command=self.canvas.yview)
 
         self.file_paths = []
-        self.column_names = ["GP%", "Cost", "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "Prev Contract MPN",
-                             "Prev Contract Price",
-                             "MPN Match", "Price Match MPN", "LAST WEEK Contract Change", "Contract Change",
-                             "PSoft Part",
-                             "count",
-                             "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?", "PS Award Price",
-                             "PS Award Exp Date",
-                             "PS Awd Cust ID",
-                             "Price Match Award", "Corp Awd Loaded", "Review Note", "90 DAY PI - NEW PRICE",
-                             "PI SENT DATE",
-                             "DIFF Price Increase",
-                             "PI EFF DATE", "12 Month CPN Sales", "DIFF LW", "LW Cost", "LW Cost Note",
-                             "LW Cost Exp Date",
-                             "LW Review Note", "Estimated $ Value",
-                             "Estimated Cost$", "Estimated GP$", "GL-Interconnect Qte - Feb (Y/N)",
-                             "DS-Battery Qte - Mar (Y/N)",
-                             "Part Class", "Sager Stock",
-                             "Cost to Use 1", "Resale 1", "Price Match", "Sager Min", "Min Match", "New Special Cost",
-                             "Internal Comments", "New Special Quote#",
-                             "SP Exp Date", "Gil Rev Price", "Gil Rev Margin", "Gil Rev MOQ", "Gil Rev SPQ",
-                             "Gil Rev Price Match", "Price OK", "Min OK",
-                             "BOM COMMENT", "Status", "Assigned"]
-        self.columns_length = len(self.column_names)  # Calculate the columns_length here
         self.create_widgets(self.inner_frame)
         self.window.configure(bg="white")  # set the background color of the window to white
         style = ttk.Style()
@@ -254,6 +231,8 @@ class ExcelSorter:
             final_df = contract_df.merge(reference_df, on='IPN', how='left', suffixes=('', '_y'))
             print("Headers in final_df:", final_df.columns.tolist())  # Print headers of final_df
 
+            # This was for getting the GP column in as a percent, did not convert the way
+            # I needed to, so leaving it out for now
             # final_df['GP%'] = (final_df['GP%'] * 100).astype(str) + '%'
 
             tolerance = 0.0001
@@ -290,7 +269,7 @@ class ExcelSorter:
                     for cell in ws["1:1"]:  # This specifies the first row, which are the headers
                         cell.alignment = Alignment(wrap_text=True)
 
-                    # Map headers to their respective colors, these will all be teal
+                    # Map headers to their respective colors, these will all be diff colors
                     headers_to_color = {
                         'GP%': "0000FFFF",
                         'Cost': "0000FFFF",
