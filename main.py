@@ -10,8 +10,6 @@ from openpyxl import load_workbook
 from tkinter import filedialog, messagebox
 import warnings
 
-# from Run_Queries import Run_Queries
-
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 
 
@@ -191,7 +189,9 @@ class ExcelSorter:
         try:
             active_award_workbook.save(active_award_file_path)
             messagebox.showinfo("Success!",
-                                "Files merged and 'Lost Items' sheet created successfully with any missing IPN's from last week that are not in the current weeks file.")
+                                "Files merged and 'Lost Items' sheet created "
+                                "successfully with any missing IPN's from last week that "
+                                "are not in the current weeks file.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
@@ -208,7 +208,8 @@ class ExcelSorter:
 
             # Define columns to bring from the reference file
             columns_to_bring = [
-                "IPN", "CM", "Item", "Price", "Prev Contract MPN", "Prev Contract Price", "MPN Match", "Price Match MPN",
+                "IPN", "CM", "Item", "Price", "Prev Contract MPN", "Prev Contract Price", "MPN Match",
+                "Price Match MPN",
                 "LAST WEEK Contract Change", "Contract Change", "PSoft Part", "count",
                 "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
                 "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
