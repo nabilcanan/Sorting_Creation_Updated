@@ -26,9 +26,8 @@ The "Partnership Sort Creation" program is designed to sort the creation files f
    - Additionally, it identifies and creates a "Lost Items" sheet that shows missing items from the previous to the active contract.
 
 3. Updating Active Contract File with VLOOK-UP Function:
-   - This button will take last week's file, and this newly created sheet with the Lost Items (our current week's file) and perform a Vlook-Up, that will bring in the columns we need from Prev Contract
-   - Once this is complete you can choose to save the file into a new workbook or save into the existing one where everything was merged 
-
+   - Select the new file we created in our last button with all the files merged and your vlookup will occur
+   - Once the process is complete you can choose where to save your new file
    
 For the **Merge Files and Create 'Lost Items' Sheet button** select the files in this order:
 1. current week
