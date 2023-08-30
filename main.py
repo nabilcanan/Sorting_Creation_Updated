@@ -20,7 +20,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files For Contract")
         self.window.configure(bg="white")
-        self.window.geometry("940x600")  # Usually 600 for normal wundow size
+        self.window.geometry("880x600")  # Usually 600 for normal wundow size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -56,25 +56,21 @@ class ExcelSorter:
 
     def create_widgets(self, frame):
         style = ttk.Style()
-        style.configure("TButton", font=("Arial", 14, "bold"), width=60, height=2)
+        style.configure("TButton", font=("Times New Roman", 16, "bold"), width=60, height=2)
         style.map("TButton",
                   foreground=[('active', 'red')],
                   background=[('active', 'blue')])
         style.configure("TButton", background="white")  # Change the button background color to white
 
         title_label = ttk.Label(frame, text="Welcome Partnership Member!",
-                                font=("Arial", 32, "underline"), background="white", foreground="#103d81")
+                                font=("Times New Roman", 32, "underline"), background="white", foreground="#103d81")
         title_label.pack(pady=10)
 
         description_label = ttk.Label(frame,
                                       text="This tool allows you to sort your Excel files for our Creation "
                                            "Contact",
-                                      font=("Arial", 16, "underline"), background="white")
+                                      font=("Times New Roman", 16, "underline"), background="white")
         description_label.pack(pady=10)
-
-        # run_creation_queries = ttk.Button(frame, text="Run Queries", command=self.run_queries_class,
-        #                                   style="Tbutton")
-        # run_creation_queries.pack(pady=10)
 
         sort_award_button = ttk.Button(frame, text="Sort Award File", command=self.sort_award_file,
                                        style="TButton")
@@ -103,7 +99,7 @@ class ExcelSorter:
                  "2. Previous Weeks Contract\n 3. Awards File 4. Backlog File\n "
                  "5. Sales History File\n 6. SND File 7. VPC File\n  8. Finally Running File\n"
                  "You will get a success message at the end",
-            font=("Arial", 18),
+            font=("Times New Roman", 19),
             background="white",
             anchor="center",
             justify="center",
@@ -120,7 +116,7 @@ class ExcelSorter:
             text="For the 'Perform VLOOKUP' button \n"
                  "1. Select the file where you now need your vlookup completed.\n"
                  "(This is the same file where all your files are now merged.) ",
-            font=("Arial", 18),
+            font=("Times New Roman", 19),
             background="white",
             anchor="center",
             justify="center",
@@ -128,7 +124,7 @@ class ExcelSorter:
         )
         new_instructions.pack(pady=10)
 
-        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOKUP",
+        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOKUP to new file",
                                             command=self.perform_vlookup, style="TButton")
         perform_vlookup_button.pack(pady=10)
 
