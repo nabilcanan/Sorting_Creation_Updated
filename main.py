@@ -208,7 +208,7 @@ class ExcelSorter:
 
             # Define columns to bring from the reference file
             columns_to_bring = [
-                "IPN", "Price", "Prev Contract MPN", "Prev Contract Price", "MPN Match", "Price Match MPN",
+                "IPN", "CM", "Item", "Price", "Prev Contract MPN", "Prev Contract Price", "MPN Match", "Price Match MPN",
                 "LAST WEEK Contract Change", "Contract Change", "PSoft Part", "count",
                 "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
                 "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
