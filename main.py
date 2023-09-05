@@ -157,10 +157,10 @@ class ExcelSorter:
         active_award_workbook = load_workbook(active_award_file_path)
 
         # Load active and prev contract dataframes
-        active_df = pd.read_excel(active_award_file_path, sheet_name=0,
-                                  skiprows=1)  # considering headers on 2nd row in 1st file
+        active_df = pd.read_excel(active_award_file_path, sheet_name=0, skiprows=1)  # considering headers on 2nd row
+
         prev_contract_file_path = file_paths[1]
-        prev_df = pd.read_excel(prev_contract_file_path, sheet_name=1)  # headers on 1st row in 2nd file
+        prev_df = pd.read_excel(prev_contract_file_path, sheet_name=0)  # headers on 1st row
 
         # Always create 'Lost Items' sheet
         lost_items_sheet = active_award_workbook.create_sheet('Lost Items')
@@ -190,9 +190,6 @@ class ExcelSorter:
                                 "are not in the current weeks file.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
-
-    def browse_files(self):
-        self.filename = filedialog.askopenfilename()
 
     "vlookup not brining in the columns correctly with their matching data to their corresponding IPNS, must fix"
 
