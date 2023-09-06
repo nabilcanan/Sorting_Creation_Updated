@@ -300,6 +300,7 @@ class ExcelSorter:
         else:
             return None
 
+    # Here is where we will sort all the files we ran our querries from
     def sort_award_file(self):
         file_path = self.select_file()
         if file_path:
