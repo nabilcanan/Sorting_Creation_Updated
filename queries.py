@@ -58,26 +58,10 @@ def new_function():
     def login_and_run_query(query, where_to_click_image):
         print(f"Starting '{query}'...")
 
-        # Get user credentials
-        username = input("Please enter your username: ")
-        password = input("Please enter your password: ")
-
-        # Launch and Connect to PeopleSoft
-        app = Application().start(r'C:\FS760\bin\CLIENT\WINX86\pstools.exe')
-        signon_window = app['PeopleSoft Signon']
-        signon_window.wait('ready', timeout=20)
-
-        # Enter credentials and Login
-        username_field = signon_window.child_window(class_name="Edit", found_index=1)
-        username_field.set_focus().type_keys(username, with_spaces=True)
-
-        password_field = signon_window.child_window(class_name="Edit", found_index=2)
-        password_field.set_focus().type_keys(password, with_spaces=True)
-
-        signon_window.child_window(title="OK", class_name="Button").click()
-        time.sleep(8)
-
-        # WE CAN USE THIS CODE SEGMENT ^^^^^ OR THE BOTTOM ONE WHERE WE AUTO ENTER THE USERS INFO
+        # # Get user credentials
+        # username = input("Please enter your username: ")
+        # password = input("Please enter your password: ")
+        #
         # # Launch and Connect to PeopleSoft
         # app = Application().start(r'C:\FS760\bin\CLIENT\WINX86\pstools.exe')
         # signon_window = app['PeopleSoft Signon']
@@ -85,13 +69,29 @@ def new_function():
         #
         # # Enter credentials and Login
         # username_field = signon_window.child_window(class_name="Edit", found_index=1)
-        # username_field.set_focus().type_keys('NCANAN', with_spaces=True)
+        # username_field.set_focus().type_keys(username, with_spaces=True)
         #
         # password_field = signon_window.child_window(class_name="Edit", found_index=2)
-        # password_field.set_focus().type_keys('Jesus9637ever', with_spaces=True)
+        # password_field.set_focus().type_keys(password, with_spaces=True)
         #
         # signon_window.child_window(title="OK", class_name="Button").click()
         # time.sleep(8)
+
+        # WE CAN USE THIS CODE SEGMENT ^^^^^ OR THE BOTTOM ONE WHERE WE AUTO ENTER THE USERS INFO
+        # Launch and Connect to PeopleSoft
+        app = Application().start(r'C:\FS760\bin\CLIENT\WINX86\pstools.exe')
+        signon_window = app['PeopleSoft Signon']
+        signon_window.wait('ready', timeout=20)
+
+        # Enter credentials and Login
+        username_field = signon_window.child_window(class_name="Edit", found_index=1)
+        username_field.set_focus().type_keys('NCANAN', with_spaces=True)
+
+        password_field = signon_window.child_window(class_name="Edit", found_index=2)
+        password_field.set_focus().type_keys('Jesus9637ever', with_spaces=True)
+
+        signon_window.child_window(title="OK", class_name="Button").click()
+        time.sleep(8)
 
         # Go to Query menu
         app = Application().connect(title_re="Application Designer - .*")
