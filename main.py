@@ -1,4 +1,3 @@
-import time
 import tkinter as tk
 import tkinter.ttk as ttk
 from openpyxl.styles import PatternFill
@@ -10,181 +9,14 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
 from tkinter import filedialog, messagebox
 import warnings
-from pywinauto import ElementNotFoundError
-from pywinauto.application import Application
-import pyautogui
-import os
+from queries import new_function
 
 warnings.simplefilter('ignore', UserWarning)
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 
 
-def click_button_image(image_path, confidence=0.8, offset=0, double_click_required=False):
-    try:
-        print(f"Looking for image '{image_path}' on screen...")
-        location = pyautogui.locateOnScreen(image_path, confidence=confidence)
-        center = pyautogui.center(location)
-
-        new_click_location = (center[0] + offset, center[1])
-        time.sleep(3)  # wait a bit before clicking
-
-        if 'WHERETOCLICKIMG4' in image_path:
-            pyautogui.doubleClick(x=1096, y=523)  # Specific coordinates for WHERETOCLICKIMG4
-        elif double_click_required:
-            pyautogui.doubleClick(new_click_location)
-        else:
-            pyautogui.click(new_click_location)  # For other images, single click
-
-        print(f"Successfully clicked on '{image_path}'.")
-        time.sleep(3)  # wait a bit after clicking
-
-    except TypeError:
-        print(f"Image '{image_path}' not found on screen!")
-
-
-def new_function():
-    image_path_run_to_excel = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'run_to_excel.png')
-    image_path_criteria = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'CRITERIAPANEL.PNG')
-    image_path_click1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG1.png')
-    image_path_click2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG2.png')
-    image_path_click3 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG3.png')
-    image_path_click4 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG4.png')
-    image_path_click5 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG5.png')
-    image_path_no_button = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'no_image_click.PNG')
-
-    query1 = "PUBLIC.QUERY.STRATEGIC_ACTIVE_AWARDS.ALL ACTIVE AWARD BY GROUP"
-    query2 = "PUBLIC.QUERY.STRATEGIC_OPEN_ORDERS.OOR BY STRATEGIC GROUP-7-20-18"
-    query3 = "PUBLIC.QUERY.STRATEGIC_ACTIVE_VPC.ALL ACTIVE VPCS FOR STRATEGIC"
-    query4 = "PUBLIC.QUERY.STRATEGIC_SOLDTOS_SND.STRATEGIC SOLDTOS SND"
-    query5 = "PUBLIC.QUERY.STRATEGIC_SALES.SALES BY CUSTOMER GROUP"
-
-    def handle_save_changes_prompt():
-        try:
-            print("Checking for Save Changes prompt...")
-            time.sleep(2)
-            click_button_image(image_path_no_button)
-            print("Clicked 'No' button.")
-            time.sleep(1)
-        except TypeError:
-            print("Save Changes prompt not found. Continuing...")
-
-    def login_and_run_query(query, where_to_click_image):
-        print(f"Starting '{query}'...")
-        # Launch and Connect to PeopleSoft
-        app = Application().start(r'C:\FS760\bin\CLIENT\WINX86\pstools.exe')
-        signon_window = app['PeopleSoft Signon']
-        signon_window.wait('ready', timeout=20)
-
-        # Enter credentials and Login
-        username_field = signon_window.child_window(class_name="Edit", found_index=1)
-        username_field.set_focus().type_keys('NCANAN', with_spaces=True)
-
-        password_field = signon_window.child_window(class_name="Edit", found_index=2)
-        password_field.set_focus().type_keys('Jesus9637ever', with_spaces=True)
-
-        signon_window.child_window(title="OK", class_name="Button").click()
-        time.sleep(8)
-
-        # Go to Query menu
-        app = Application().connect(title_re="Application Designer - .*")
-        app.top_window().menu_select("Go->PeopleTools->Query")
-        app.top_window().close()
-        time.sleep(5)
-
-        # Open Query
-        query_app = Application().connect(title="Untitled - Query")  # Modified line
-        toolbar = query_app.top_window().child_window(class_name="ToolbarWindow32")
-        toolbar.button(1).click_input()
-        time.sleep(5)
-
-        open_query_app = Application().connect(title="Open Query")
-        open_query_window = open_query_app['Open Query']
-
-        open_query_window.Edit.set_text(query)
-        print(f"Query text for '{query}' set. Waiting a bit before clicking OK...")
-        time.sleep(3)
-        open_query_window.OK.click_input()
-        print(f"OK clicked for '{query}'. Waiting for criteria panel...")
-        time.sleep(5)
-
-        # Click on criteria panel
-        click_button_image(image_path_criteria)
-
-        # Click on specified "where to click" image (either WHERETOCLICKIMG1.png or WHERETOCLICKIMG2.png)
-        click_button_image(where_to_click_image, offset=50, double_click_required=True)  # <-- Updated line
-
-        # Enter NEOTECH in the 'Constant' window and click OK
-        constant_app = Application().connect(title="Constant")
-        constant_app.window(title="Constant").child_window(class_name="Edit").set_text("CREATION")
-        constant_app.window(title="Constant").child_window(title="OK", class_name="Button").click_input()
-        time.sleep(2)
-
-        # Marker to check if run_to_excel has been clicked
-        run_to_excel_clicked = False
-
-        def click_run_to_excel():
-            nonlocal run_to_excel_clicked
-            if not run_to_excel_clicked:
-                # Look for the image and click it
-                click_button_image(image_path_run_to_excel)
-                run_to_excel_clicked = True
-                time.sleep(20)  # Wait for 20 seconds after clicking
-
-        click_run_to_excel()
-
-        try:
-            if query_app.window(title_re=".*Query.*").exists():
-                print("Closing query window...")
-                query_app.window(title_re=".*Query.*").close()
-                print("Query window closed.")
-        except Exception as e:
-            print(f"Error while closing the query window: {str(e)}")
-
-    try:
-        # Use a counter to keep track of completed queries
-        queries_completed = 0
-
-        def on_query_completed():
-            nonlocal queries_completed
-            queries_completed += 1
-            print(f"Completed {queries_completed} queries.")
-            if queries_completed == 5:
-                messagebox.showinfo("Queries Completed",
-                                    "Both queries have been executed. Please allow some time for Excel sheets to load.")
-
-        # Run both queries
-        print("Running first query...")
-        login_and_run_query(query1, image_path_click1)
-        handle_save_changes_prompt()
-        print("Running second query...")
-        login_and_run_query(query2, image_path_click2)
-        handle_save_changes_prompt()
-        print("Running third query...")
-        login_and_run_query(query3, image_path_click3)
-        handle_save_changes_prompt()
-        print("Running fourth query...")
-        login_and_run_query(query4, image_path_click4)
-        handle_save_changes_prompt()
-        print("Running fifth query...")
-        login_and_run_query(query5, image_path_click5)
-        handle_save_changes_prompt()
-
-        on_query_completed()
-
-    except ElementNotFoundError as e:
-        print(f"Element not found: {str(e)}")
-    except Exception as e:
-        print(f"Error: {str(e)}")
-
-
-def run_queries():
-    new_function()
-
-
 class ExcelSorter:
     def __init__(self):
-        self.run_queries_class = None
-        self.filename = None
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files For Contract")
         self.window.configure(bg="white")
@@ -240,7 +72,7 @@ class ExcelSorter:
                                       font=("Times New Roman", 16, "underline"), background="white")
         description_label.pack(pady=10)
 
-        run_queries_button = ttk.Button(frame, text="Run Queries", command=run_queries, style="TButton")
+        run_queries_button = ttk.Button(frame, text="Run Queries", command=new_function, style="TButton")
         run_queries_button.pack(pady=10)
 
         sort_award_button = ttk.Button(frame, text="Sort Award File", command=self.sort_award_file,
@@ -313,6 +145,7 @@ class ExcelSorter:
 
     @staticmethod
     def merge_files_and_create_lost_items():
+        print("merge_files_and_create_lost_items called")
         file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC",
                       "Running File - 30 Day Notice Contract Price Increase_Sager - COSTED"]
         file_paths = []
@@ -366,6 +199,7 @@ class ExcelSorter:
 
     @staticmethod
     def perform_vlookup():
+        print("perform_vlookup called")
         try:
             # Ask the user for the contract file paths
             contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup")
@@ -462,10 +296,10 @@ class ExcelSorter:
             messagebox.showerror("Error", str(e))
 
     @staticmethod
-    def select_file():
-        print("select_file called")
+    def select_file(file_type="Excel"):
+        print("Select File Function  called")
 
-        file_path = filedialog.askopenfilename(title="Select Excel file",
+        file_path = filedialog.askopenfilename(title=f"Select {file_type} file",
                                                filetypes=(
                                                    ("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")))
         if file_path:
@@ -475,37 +309,37 @@ class ExcelSorter:
 
     # Here is where we will sort all the files we ran our querries from
     def sort_award_file(self):
-        print("sort_award_file called")
-
-        file_path = self.select_file()
+        print("Sort Award File called")
+        file_path = self.select_file("Awards")
         if file_path:
-            self.sort_excel(file_path, ['Product ID', 'Award Cust ID'], [True, False])
+            self.sort_excel(file_path, ['Product ID', 'Award Cust ID'], [True, False], "Award")
 
     def sort_backlog_file(self):
-        print("sort backlog file called")
-        file_path = self.select_file()
+        print("Sort Backlog File called")
+        file_path = self.select_file("Backlog")
         if file_path:
-            self.sort_excel(file_path, ['Product ID', 'Backlog Entry'], [True, False])
+            self.sort_excel(file_path, ['Product ID', 'Backlog Entry'], [True, False], "Backlog")
 
     def sort_by_last_ship_date(self):
-        print("sort_SALED_file called")
-        file_path = self.select_file()
+        print("Sort Sales File called")
+        file_path = self.select_file("Sales")
         if file_path:
-            self.sort_excel(file_path, ['Product ID', 'Last Ship Date'], [True, False])
+            self.sort_excel(file_path, ['Product ID', 'Last Ship Date'], [True, False], "Sales History")
 
     def sort_ship_and_debit(self):
-        print("sort_ship and debit_file called")
-        file_path = self.select_file()
+        print("Sort Ship and Debit called")
+        file_path = self.select_file("SND")
         if file_path:
-            self.sort_excel(file_path, ['Product ID', 'SND Cost'], [True, True])
+            self.sort_excel(file_path, ['Product ID', 'SND Cost'], [True, True], "Ship & Debit")
 
     def sort_vpc(self):
-        file_path = self.select_file()
+        print("Sort VPC File called")
+        file_path = self.select_file("VPC")
         if file_path:
-            self.sort_excel(file_path, ['PART ID', 'VPC Cost'], [True, False])
+            self.sort_excel(file_path, ['PART ID', 'VPC Cost'], [True, False], "VPC")
 
     @staticmethod
-    def sort_excel(file_path, sort_columns, ascending_order):
+    def sort_excel(file_path, sort_columns, ascending_order, file_type=""):
         if not sort_columns:
             messagebox.showerror("Error", "No columns selected for sorting.")
             return
@@ -528,7 +362,7 @@ class ExcelSorter:
             # Save the sorted DataFrame back to the Excel file
             df.to_excel(file_path, index=False)
 
-            messagebox.showinfo("Success!", "Excel file sorted and saved successfully.")
+            messagebox.showinfo("Success!", f"Success! {file_type} file sorted and saved successfully.")
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
