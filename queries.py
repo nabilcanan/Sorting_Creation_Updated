@@ -28,9 +28,9 @@ def click_button_image(image_path, confidence=0.8, offset=0, double_click_requir
         print(f"Image '{image_path}' not found on screen!")
 
 
-def get_user_credentials():
-    root = Tk()  # Create the main window
-    root.withdraw()  # Hide the main window
+def get_user_credentials():  # This will gahter the user credentials we need to log in to peoplesoft
+    root = Tk()
+    root.withdraw()
 
     username = simpledialog.askstring("Username", "Please enter your PeopleSoft username:", parent=root)
 
@@ -135,7 +135,7 @@ def new_function():
         # Click on specified "where to click" image (either WHERETOCLICKIMG1.png or WHERETOCLICKIMG2.png)
         click_button_image(where_to_click_image, offset=50, double_click_required=True)  # <-- Updated line
 
-        # Enter NEOTECH in the 'Constant' window and click OK
+        # Enter Creation in the 'Constant' window and click OK
         constant_app = Application().connect(title="Constant")
         constant_app.window(title="Constant").child_window(class_name="Edit").set_text("CREATION")
         constant_app.window(title="Constant").child_window(title="OK", class_name="Button").click_input()
