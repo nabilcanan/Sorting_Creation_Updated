@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 class ExcelSorter:
     def __init__(self):
         self.window = tk.Tk()
-        self.window.title("Sorting Creation Files For Contract")
+        self.window.title("Sorting Creation Files And Performing VlookUp")
         self.window.configure(bg="white")
         self.window.geometry("880x600")  # Usually 600 for normal wundow size
 
@@ -46,9 +46,7 @@ class ExcelSorter:
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         self.scrollbar.configure(command=self.canvas.yview)
 
-        self.file_paths = []
         self.create_widgets(self.inner_frame)
-        self.window.configure(bg="white")  # set the background color of the window to white
         style = ttk.Style()
         style.configure("TFrame", background="white")  # set the background color of ttk.Frame to white
 
@@ -151,7 +149,8 @@ class ExcelSorter:
         file_paths = []
 
         for file_name in file_names:
-            file_path = filedialog.askopenfilename(title="Select {} file".format(file_name))
+            file_path = filedialog.askopenfilename(title="Select {} file".format(file_name),
+                                                   initialdir="I:\Quotes\Partnership Sales - CM\Creation")
             if not file_path:
                 messagebox.showerror("Error", "File selection cancelled.")
                 return
@@ -202,7 +201,8 @@ class ExcelSorter:
         print("perform_vlookup called")
         try:
             # Ask the user for the contract file paths
-            contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup")
+            contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup",
+                                                       initialdir="I:\Quotes\Partnership Sales - CM\Creation")
 
             # Define columns to bring from the reference file
             columns_to_bring = [
@@ -293,7 +293,7 @@ class ExcelSorter:
                 messagebox.showinfo("Success", "The output file has been saved as: " + output_file)
 
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Error Process was Cancelled", str(e))
 
     @staticmethod
     def select_file(file_type="Excel"):
@@ -301,7 +301,9 @@ class ExcelSorter:
 
         file_path = filedialog.askopenfilename(title=f"Select {file_type} file",
                                                filetypes=(
-                                                   ("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")))
+                                                   ("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")),
+                                               initialdir="I:\Quotes\Partnership Sales - CM\Creation")
+
         if file_path:
             return file_path
         else:

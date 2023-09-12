@@ -77,7 +77,7 @@ def new_function():
         signon_window.child_window(title="OK", class_name="Button").click()
         time.sleep(8)
 
-        # WE CAN USE THIS CODE SEGMENT ^^^^^ OR THE BOTTOM ONE WHERE WE AUTO ENTER THE USERS INFO 
+        # WE CAN USE THIS CODE SEGMENT ^^^^^ OR THE BOTTOM ONE WHERE WE AUTO ENTER THE USERS INFO
         # # Launch and Connect to PeopleSoft
         # app = Application().start(r'C:\FS760\bin\CLIENT\WINX86\pstools.exe')
         # signon_window = app['PeopleSoft Signon']
