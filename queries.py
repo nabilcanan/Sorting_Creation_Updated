@@ -100,11 +100,11 @@ def new_function():
         password_field.set_focus().type_keys(password, with_spaces=True)
 
         signon_window.child_window(title="OK", class_name="Button").click()
-        time.sleep(2)
+        time.sleep(1)
 
         # Check if login failed
         if app.window(title="Network API").exists():
-            messagebox.showerror("Error", "PeopleSoft login failed. Please check your credentials.")
+            messagebox.showerror("Error", "PeopleSoft login failed. Please check your credentials NOW!.")
             raise Exception("LoginFailed")  # Raise an exception when login fails
 
         # Go to Query menu
