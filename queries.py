@@ -1,6 +1,5 @@
 import time
-from tkinter import messagebox
-from pywinauto import ElementNotFoundError
+from tkinter import messagebox, Tk, simpledialog
 from pywinauto.application import Application
 import pyautogui
 import os
@@ -29,6 +28,29 @@ def click_button_image(image_path, confidence=0.8, offset=0, double_click_requir
         print(f"Image '{image_path}' not found on screen!")
 
 
+def get_user_credentials():
+    root = Tk()  # Create the main window
+    root.withdraw()  # Hide the main window
+
+    username = simpledialog.askstring("Username", "Please enter your PeopleSoft username:", parent=root)
+
+    if username is None:  # Check if user pressed Cancel for username
+        messagebox.showinfo("Cancelled", "Operation was cancelled.")
+        root.destroy()
+        return None, None
+
+    password = simpledialog.askstring("Password", "Please enter your PeopleSoft password:", parent=root, show='*')
+
+    if password is None:  # Check if user pressed Cancel for password
+        messagebox.showinfo("Cancelled", "You have cancelled the Run Queries Process.")
+        root.destroy()
+        return None, None
+
+    root.destroy()  # Close the tkinter window after getting input
+
+    return username, password
+
+
 def new_function():
     image_path_run_to_excel = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'run_to_excel.png')
     image_path_criteria = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'CRITERIAPANEL.PNG')
@@ -55,43 +77,35 @@ def new_function():
         except TypeError:
             print("Save Changes prompt not found. Continuing...")
 
+    username, password = get_user_credentials()
+
+    # Check if credentials were provided
+    if username is None or password is None:
+        print("Operation was cancelled.")
+        return
+
     def login_and_run_query(query, where_to_click_image):
         print(f"Starting '{query}'...")
 
-        # # Get user credentials
-        # username = input("Please enter your username: ")
-        # password = input("Please enter your password: ")
-        #
-        # # Launch and Connect to PeopleSoft
-        # app = Application().start(r'C:\FS760\bin\CLIENT\WINX86\pstools.exe')
-        # signon_window = app['PeopleSoft Signon']
-        # signon_window.wait('ready', timeout=20)
-        #
-        # # Enter credentials and Login
-        # username_field = signon_window.child_window(class_name="Edit", found_index=1)
-        # username_field.set_focus().type_keys(username, with_spaces=True)
-        #
-        # password_field = signon_window.child_window(class_name="Edit", found_index=2)
-        # password_field.set_focus().type_keys(password, with_spaces=True)
-        #
-        # signon_window.child_window(title="OK", class_name="Button").click()
-        # time.sleep(8)
-
-        # WE CAN USE THIS CODE SEGMENT ^^^^^ OR THE BOTTOM ONE WHERE WE AUTO ENTER THE USERS INFO
         # Launch and Connect to PeopleSoft
         app = Application().start(r'C:\FS760\bin\CLIENT\WINX86\pstools.exe')
         signon_window = app['PeopleSoft Signon']
         signon_window.wait('ready', timeout=20)
 
-        # Enter credentials and Login
+        # Use the previously gathered credentials
         username_field = signon_window.child_window(class_name="Edit", found_index=1)
-        username_field.set_focus().type_keys('NCANAN', with_spaces=True)
+        username_field.set_focus().type_keys(username, with_spaces=True)
 
         password_field = signon_window.child_window(class_name="Edit", found_index=2)
-        password_field.set_focus().type_keys('Jesus9637ever', with_spaces=True)
+        password_field.set_focus().type_keys(password, with_spaces=True)
 
         signon_window.child_window(title="OK", class_name="Button").click()
-        time.sleep(8)
+        time.sleep(2)
+
+        # Check if login failed
+        if app.window(title="Network API").exists():
+            messagebox.showerror("Error", "PeopleSoft login failed. Please check your credentials.")
+            raise Exception("LoginFailed")  # Raise an exception when login fails
 
         # Go to Query menu
         app = Application().connect(title_re="Application Designer - .*")
@@ -179,7 +193,8 @@ def new_function():
 
         on_query_completed()
 
-    except ElementNotFoundError as e:
-        print(f"Element not found: {str(e)}")
     except Exception as e:
-        print(f"Error: {str(e)}") \
+        if str(e) == "LoginFailed":  # Check for the custom exception
+            print("Login failed. Stopping further queries.")
+        else:
+            print(f"Error: {str(e)}")

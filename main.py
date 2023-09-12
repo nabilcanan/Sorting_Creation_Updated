@@ -50,6 +50,13 @@ class ExcelSorter:
 
         self.inner_frame = ttk.Frame(self.canvas, style="TFrame")  # create the inner frame with the updated style
 
+        # This function will get triggered when the mouse wheel is scrolled
+        def _on_mousewheel(event):
+            self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
+
+        # Bind the function to the MouseWheel event
+        self.canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
     def create_widgets(self, frame):
         style = ttk.Style()
         style.configure("TButton", font=("Times New Roman", 16, "bold"), width=60, height=2)
