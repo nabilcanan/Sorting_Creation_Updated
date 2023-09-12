@@ -4,12 +4,15 @@ The "Partnership Sort Creation" program is designed to sort the creation files f
 
 ## Requirements
 
+- `Latest version of Python`
 - `pandas`
 - `openpyxl`
 - `Python 3.11`
 - `Pycharm`
 - `PIL`
-- `Latest version of Python`
+- `PyWinAuto`
+- `pyautogui`
+- `os`
 
 
 ## Functionality
@@ -40,9 +43,8 @@ For the **Merge Files and Create 'Lost Items' Sheet button** select the files in
 8. running file 
 
 For the vlookup button select in this order 
-1. select last week's file
-2. select current week file 
-3. save wherever you want 
+1. All you need to select for this button is the new workbook we just created with the lost items sheet. 
+2. Then choose where you'd like to save the final workbook with all your data. 
 
 There is a video on this program working step by step in the images-video folder, to access just clock the folder in the repository, then clock the video (mkv file) and select 'view raw'
 This will download the video for you to view.
