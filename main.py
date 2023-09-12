@@ -130,7 +130,7 @@ class ExcelSorter:
         )
         new_instructions.pack(pady=10)
 
-        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOKUP to new file",
+        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOK-UP to new file",
                                             command=perform_vlookup, style="TButton")
         perform_vlookup_button.pack(pady=10)
 
