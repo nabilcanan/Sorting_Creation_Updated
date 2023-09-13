@@ -24,7 +24,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files And Performing VlookUp")
         self.window.configure(bg="white")
-        self.window.geometry("1110x627")  # Usually 600 for normal wundow size
+        self.window.geometry("880x600")  # Usually 600 for normal wundow size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -81,15 +81,24 @@ class ExcelSorter:
                                       font=("Times New Roman", 20, "underline"), background="white")
         description_label.pack(pady=10)
 
-        description_label = ttk.Label(frame, text="Select the Run Queries Button and don't move your mouse "
-                                                  "after you enter your Peoplesoft Login Credentials",
+        description_label = ttk.Label(frame, text="Select the Run Queries Button and don't move your mouse\n "
+                                                  "after you enter your Peoplesoft Login Credentials\n"
+                                                  "Make sure you notice the queries are ran in this order\n"
+                                                  "1. Awards 2. Backlog 3. VPC 4. SND 5. Sales History",
                                       font=("Times New Roman",
-                                            18, "underline"),
+                                            18, "bold"),
                                       background="white")
         description_label.pack(anchor='center')
 
         run_queries_button = ttk.Button(frame, text="Run Queries", command=new_function, style="TButton")
         run_queries_button.pack(pady=10)
+
+        description_label = ttk.Label(frame, text="Once you've saved all your files in the designated location\n"
+                                                  " you can use the next set of buttons to sort every query we ran",
+                                      font=("Times New Roman",
+                                            18, "underline"),
+                                      background="white")
+        description_label.pack(anchor='center')
 
         sort_award_button = ttk.Button(frame, text="Sort Award File", command=self.sort_award_file,
                                        style="TButton")
