@@ -9,17 +9,23 @@ def click_button_image(image_path, confidence=0.8, offset=0, double_click_requir
     try:
         print(f"Looking for image '{image_path}' on screen...")
         location = pyautogui.locateOnScreen(image_path, confidence=confidence)
-        center = pyautogui.center(location)
-
-        new_click_location = (center[0] + offset, center[1])
-        time.sleep(3)  # wait a bit before clicking
 
         if 'WHERETOCLICKIMG4' in image_path:
-            pyautogui.doubleClick(x=1096, y=523)  # Specific coordinates for WHERETOCLICKIMG4
-        elif double_click_required:
-            pyautogui.doubleClick(new_click_location)
+            # If WHERETOCLICKIMG4 is in the image_path, calculate the custom offset
+            # relative to the found location, then click it.
+            custom_offset_x = 618  # Replace with actual x offset
+            custom_offset_y = 522  # Replace with actual y offset
+            pyautogui.doubleClick(location[0] + custom_offset_x, location[1] + custom_offset_y)
+
         else:
-            pyautogui.click(new_click_location)  # For other images, single click
+            # For other images, find the center and then apply any offset
+            center = pyautogui.center(location)
+            new_click_location = (center[0] + offset, center[1])
+
+            if double_click_required:
+                pyautogui.doubleClick(new_click_location)
+            else:
+                pyautogui.click(new_click_location)
 
         print(f"Successfully clicked on '{image_path}'.")
         time.sleep(3)  # wait a bit after clicking
@@ -111,23 +117,23 @@ def new_function():
         app = Application().connect(title_re="Application Designer - .*")
         app.top_window().menu_select("Go->PeopleTools->Query")
         app.top_window().close()
-        time.sleep(5)
+        time.sleep(2)  # ORIGINALLY 5
 
         # Open Query
         query_app = Application().connect(title="Untitled - Query")  # Modified line
         toolbar = query_app.top_window().child_window(class_name="ToolbarWindow32")
         toolbar.button(1).click_input()
-        time.sleep(5)
+        time.sleep(3)  # ORIGINALLY 5
 
         open_query_app = Application().connect(title="Open Query")
         open_query_window = open_query_app['Open Query']
 
         open_query_window.Edit.set_text(query)
         print(f"Query text for '{query}' set. Waiting a bit before clicking OK...")
-        time.sleep(3)
+        time.sleep(2)
         open_query_window.OK.click_input()
         print(f"OK clicked for '{query}'. Waiting for criteria panel...")
-        time.sleep(5)
+        time.sleep(3)  # ORIGINALLY 5
 
         # Click on criteria panel
         click_button_image(image_path_criteria)
@@ -150,7 +156,7 @@ def new_function():
                 # Look for the image and click it
                 click_button_image(image_path_run_to_excel)
                 run_to_excel_clicked = True
-                time.sleep(20)  # Wait for 20 seconds after clicking
+                time.sleep(5)  # Wait for 20 seconds after clicking
 
         click_run_to_excel()
 
