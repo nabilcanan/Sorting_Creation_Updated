@@ -106,7 +106,7 @@ def new_function():
         password_field.set_focus().type_keys(password, with_spaces=True)
 
         signon_window.child_window(title="OK", class_name="Button").click()
-        time.sleep(8)
+        time.sleep(8)  # Switch back to 8
 
         # Check if login failed
         if app.window(title="Network API").exists():
