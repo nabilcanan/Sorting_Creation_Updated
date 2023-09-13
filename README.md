@@ -2,9 +2,8 @@
 
 The "Partnership Sort Creation" program is designed to sort the creation files for the week and perform various data operations within them. This program helps organize and consolidate the data for efficient processing.
 
-## Requirements
+## Requirements, these will need to be done by pip
 
-- `Latest version of Python`
 - `pandas`
 - `openpyxl`
 - `Python 3.11`
@@ -13,6 +12,8 @@ The "Partnership Sort Creation" program is designed to sort the creation files f
 - `PyWinAuto`
 - `pyautogui`
 - `os`
+- `opencv-python`
+- `image`
 
 
 ## Functionality

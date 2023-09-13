@@ -8,9 +8,15 @@ from tkinter import filedialog, messagebox
 import warnings
 from queries import new_function
 from vlookup import perform_vlookup
+import webbrowser
 
 warnings.simplefilter('ignore', UserWarning)
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
+
+
+def open_readme_link():
+    webbrowser.open('https://github.com/nabilcanan/Sorting_Creation_Updated/blob/main/README.md',
+                    new=2)  # new=2 ensures the link opens in a new window.
 
 
 class ExcelSorter:
@@ -18,7 +24,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files And Performing VlookUp")
         self.window.configure(bg="white")
-        self.window.geometry("880x600")  # Usually 600 for normal wundow size
+        self.window.geometry("1110x627")  # Usually 600 for normal wundow size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -72,8 +78,15 @@ class ExcelSorter:
         description_label = ttk.Label(frame,
                                       text="This tool allows you to sort your Excel files for our Creation "
                                            "Contact",
-                                      font=("Times New Roman", 16, "underline"), background="white")
+                                      font=("Times New Roman", 20, "underline"), background="white")
         description_label.pack(pady=10)
+
+        description_label = ttk.Label(frame, text="Select the Run Queries Button and don't move your mouse "
+                                                  "after you enter your Peoplesoft Login Credentials",
+                                      font=("Times New Roman",
+                                            18, "underline"),
+                                      background="white")
+        description_label.pack(anchor='center')
 
         run_queries_button = ttk.Button(frame, text="Run Queries", command=new_function, style="TButton")
         run_queries_button.pack(pady=10)
@@ -133,6 +146,10 @@ class ExcelSorter:
         perform_vlookup_button = ttk.Button(frame, text="Perform VLOOK-UP to new file",
                                             command=perform_vlookup, style="TButton")
         perform_vlookup_button.pack(pady=10)
+
+        readme_button = ttk.Button(frame, text="Open ReadMe",
+                                   command=open_readme_link, style="TButton")
+        readme_button.pack(pady=10)
 
         logo_label = ttk.Label(frame, background="white")
         logo_label.pack(pady=10)

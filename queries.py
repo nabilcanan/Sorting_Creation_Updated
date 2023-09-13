@@ -58,14 +58,18 @@ def get_user_credentials():  # This will gahter the user credentials we need to 
 
 
 def new_function():
-    image_path_run_to_excel = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'run_to_excel.png')
-    image_path_criteria = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'CRITERIAPANEL.PNG')
-    image_path_click1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG1.png')
-    image_path_click2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG2.png')
-    image_path_click3 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG3.png')
-    image_path_click4 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG4.png')
-    image_path_click5 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'WHERETOCLICKIMG5.png')
-    image_path_no_button = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'no_image_click.PNG')
+    # Modify these paths to account for the new subdirectory
+    base_directory = os.path.dirname(os.path.abspath(__file__))
+    image_folder_path = os.path.join(base_directory, 'images-videos')
+
+    image_path_run_to_excel = os.path.join(image_folder_path, 'run_to_excel.png')
+    image_path_criteria = os.path.join(image_folder_path, 'CRITERIAPANEL.PNG')
+    image_path_click1 = os.path.join(image_folder_path, 'WHERETOCLICKIMG1.png')
+    image_path_click2 = os.path.join(image_folder_path, 'WHERETOCLICKIMG2.png')
+    image_path_click3 = os.path.join(image_folder_path, 'WHERETOCLICKIMG3.png')
+    image_path_click4 = os.path.join(image_folder_path, 'WHERETOCLICKIMG4.png')
+    image_path_click5 = os.path.join(image_folder_path, 'WHERETOCLICKIMG5.png')
+    image_path_no_button = os.path.join(image_folder_path, 'no_image_click.PNG')
 
     query1 = "PUBLIC.QUERY.STRATEGIC_ACTIVE_AWARDS.ALL ACTIVE AWARD BY GROUP"
     query2 = "PUBLIC.QUERY.STRATEGIC_OPEN_ORDERS.OOR BY STRATEGIC GROUP-7-20-18"
