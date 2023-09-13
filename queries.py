@@ -106,7 +106,7 @@ def new_function():
         password_field.set_focus().type_keys(password, with_spaces=True)
 
         signon_window.child_window(title="OK", class_name="Button").click()
-        time.sleep(1)
+        time.sleep(8)
 
         # Check if login failed
         if app.window(title="Network API").exists():
@@ -117,23 +117,23 @@ def new_function():
         app = Application().connect(title_re="Application Designer - .*")
         app.top_window().menu_select("Go->PeopleTools->Query")
         app.top_window().close()
-        time.sleep(2)  # ORIGINALLY 5
+        time.sleep(5)  # ORIGINALLY 5
 
         # Open Query
         query_app = Application().connect(title="Untitled - Query")  # Modified line
         toolbar = query_app.top_window().child_window(class_name="ToolbarWindow32")
         toolbar.button(1).click_input()
-        time.sleep(3)  # ORIGINALLY 5
+        time.sleep(5)  # ORIGINALLY 5
 
         open_query_app = Application().connect(title="Open Query")
         open_query_window = open_query_app['Open Query']
 
         open_query_window.Edit.set_text(query)
         print(f"Query text for '{query}' set. Waiting a bit before clicking OK...")
-        time.sleep(2)
+        time.sleep(5)
         open_query_window.OK.click_input()
         print(f"OK clicked for '{query}'. Waiting for criteria panel...")
-        time.sleep(3)  # ORIGINALLY 5
+        time.sleep(5)  # ORIGINALLY 5
 
         # Click on criteria panel
         click_button_image(image_path_criteria)
