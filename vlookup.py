@@ -72,22 +72,26 @@ def perform_vlookup():
 
                 ws = writer.sheets['Active Supplier Contracts']
 
-                # Make headers wraptext
-                for cell in ws["1:1"]:  # This specifies the first row, which are the headers
-                    cell.alignment = Alignment(wrap_text=True)
+                # # Make headers wraptext
+                # for cell in ws["1:1"]:  # This specifies the first row, which are the headers
+                #     cell.alignment = Alignment(wrap_text=True)
 
                 # Map headers to their respective colors, these will all be diff colors
                 headers_to_color = {
+                    'Price': "0000FFFF",
                     'GP%': "0000FFFF",
                     'Cost': "0000FFFF",
                     'Cost Note': "0000FFFF",
                     'Quote#': "0000FFFF",
                     'Cost Exp Date': "0000FFFF",
                     'Cost MOQ': "0000FFFF",
-                    'IPN': "00FFFF00",
-                    'MPN': "00FFFF00",
-                    'MFG': "00FFFF00",
-                    'Customer Name': "00FFFF00",
+                    'PSoft Part': "00FFFF00",
+                    'MPN': "0000FFFF",
+                    'MFG': "0000FFFF",
+                    'EAU': "0000FFFF",
+                    'MOQ': "0000FFFF",
+                    'MPQ': "0000FFFF",
+                    'NCNR': "0000FFFF"
                 }
 
                 for row in ws.iter_rows(min_row=1, max_row=1):
