@@ -24,7 +24,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files And Performing VlookUp")
         self.window.configure(bg="white")
-        self.window.geometry("880x600")  # Usually 600 for normal wundow size
+        self.window.geometry("883x600")  # Usually 600 for normal wundow size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -152,7 +152,7 @@ class ExcelSorter:
         )
         new_instructions.pack(pady=10)
 
-        perform_vlookup_button = ttk.Button(frame, text="Perform VLOOK-UP to new file",
+        perform_vlookup_button = ttk.Button(frame, text="Perform VLook-Up to new file",
                                             command=perform_vlookup, style="TButton")
         perform_vlookup_button.pack(pady=10)
 
