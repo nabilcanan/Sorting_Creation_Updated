@@ -1,7 +1,7 @@
 from tkinter import filedialog, messagebox
 import pandas as pd
 from openpyxl.styles import PatternFill
-from openpyxl.styles import Alignment
+# from openpyxl.styles import Alignment
 import numpy as np
 
 
@@ -12,6 +12,7 @@ def perform_vlookup():
         contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup",
                                                    initialdir="I:\Quotes\Partnership Sales - CM\Creation")
 
+        # Changing in which columns are brought in for a specific purpose 
         # Define columns to bring from the reference file
         columns_to_bring = [
             "IPN", "CM", "Item", "Price", "Prev Contract MPN", "Prev Contract Price", "MPN Match",
