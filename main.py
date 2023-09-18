@@ -16,7 +16,7 @@ warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 
 def open_readme_link():
     webbrowser.open('https://github.com/nabilcanan/Sorting_Creation_Updated/blob/main/README.md',
-                    new=2)  # new=2 ensures the link opens in a new window.
+                    new=2)
 
 
 class ExcelSorter:
