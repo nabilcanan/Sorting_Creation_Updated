@@ -66,7 +66,8 @@ def perform_vlookup():
         )
 
         # Ask the user for the output file path
-        output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
+        output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as",
+                                                   initialdir="I:\Quotes\Partnership Sales - CM\Creation")
 
         # Write all the DataFrames to the new Excel file in the specified order
         if output_file:
