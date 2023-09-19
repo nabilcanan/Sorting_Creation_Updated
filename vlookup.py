@@ -80,12 +80,14 @@ def perform_vlookup():
                 vpc_df.to_excel(writer, index=False, sheet_name='VPC')
                 backlog_df.to_excel(writer, index=False, sheet_name='Backlog')
                 sales_history_df.to_excel(writer, index=False, sheet_name='Sales History')
-                running_file_df.to_excel(writer, index=False, sheet_name='Running File - 30 Day Notice Co')
+                running_file_df.to_excel(writer, index=False, sheet_name='Price Increases')
 
                 # Grabbing the workbook and the desired sheet
                 workbook = writer.book
                 sheet = workbook['Active Supplier Contracts']
 
+                # This code until the headers_to_color it the formula we incorporated to calculate GP %
+                # Its (Resale Price - Cost) / Resale Price
                 # Find the columns for 'Price_x', 'Cost', and 'GP%'
                 price_x_col = None
                 cost_col = None
