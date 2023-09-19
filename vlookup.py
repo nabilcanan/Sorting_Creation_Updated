@@ -1,6 +1,6 @@
 from tkinter import filedialog, messagebox
 import pandas as pd
-# from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill
 # from openpyxl.styles import Alignment
 import numpy as np
 
@@ -23,10 +23,16 @@ def perform_vlookup():
         running_file_df = pd.read_excel(contract_file, sheet_name='Running File - 30 Day Notice Co')
 
         # Merge on 'IPN' to get the 'PSoft Part' column
-        active_supplier_df = active_supplier_df.merge(prev_contract_df[['IPN', 'PSoft Part']], on='IPN', how='left')
-
-        # Create and initialize the 'Cost' column
-        active_supplier_df['Cost'] = np.nan
+        active_supplier_df = active_supplier_df.merge(
+            prev_contract_df[['IPN', "Price", 'PSoft Part', "Prev Contract MPN", "Prev Contract Price", "MPN Match",
+                              "Price Match MPN",
+                              "LAST WEEK Contract Change", "Contract Change", "count",
+                              "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
+                              "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
+                              "Corp Awd Loaded", "90 DAY PI - NEW PRICE", "PI SENT DATE",
+                              "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
+                              "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "DIFF LW", "LW Cost",
+                              "LW Cost Note", "LW Cost Exp Date", "Review Note"]], on='IPN', how='left')
 
         # Iterate through each row in the active_supplier_df to look for a match in SND and VPC
         for idx, row in active_supplier_df.iterrows():
@@ -42,6 +48,21 @@ def perform_vlookup():
             matching_vpc = vpc_df[vpc_df['PART ID'] == psoft_part]
             if not matching_vpc.empty and not pd.isna(matching_vpc.iloc[0, 1]):
                 active_supplier_df.at[idx, 'Cost'] = matching_vpc.iloc[0, 1]
+
+        print(active_supplier_df.columns)
+
+        tolerance = 0.01  # you can set it to any value you deem fit
+
+        active_supplier_df['Contract Change'] = np.where(
+            abs(active_supplier_df['Price_x'] - active_supplier_df['Price_y']) <= tolerance,
+            'No Change',
+            np.where(active_supplier_df['Price_x'] > active_supplier_df['Price_y'],
+                     'Price Increase',
+                     np.where(active_supplier_df['Price_x'] < active_supplier_df['Price_y'],
+                              'Price Decrease',
+                              np.where(pd.isna(active_supplier_df['Price_y']),
+                                       'New Item', 'Unknown')))
+        )
 
         # Ask the user for the output file path
         output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as")
@@ -59,8 +80,67 @@ def perform_vlookup():
                 sales_history_df.to_excel(writer, index=False, sheet_name='Sales History')
                 running_file_df.to_excel(writer, index=False, sheet_name='Running File - 30 Day Notice Co')
 
+                # Grabbing the workbook and the desired sheet
+                workbook = writer.book
+                sheet = workbook['Active Supplier Contracts']
+
+                headers_to_color = {
+                    'Price': "0000FFFF",
+                    'GP%': "0000FFFF",
+                    'Cost': "0000FFFF",
+                    'Cost Note': "0000FFFF",
+                    'Quote#': "0000FFFF",
+                    'Cost Exp Date': "0000FFFF",
+                    'Cost MOQ': "0000FFFF",
+                    'PSoft Part': "00FFFF00",
+                    'MPN': "0000FFFF",
+                    'MFG': "0000FFFF",
+                    'EAU': "0000FFFF",
+                    'MOQ': "0000FFFF",
+                    'MPQ': "0000FFFF",
+                    'NCNR': "0000FFFF"
+                }
+
+                for col_num, col_cells in enumerate(sheet.columns, start=1):
+                    if col_cells[0].value in headers_to_color:
+                        col_cells[0].fill = PatternFill(start_color=headers_to_color[col_cells[0].value],
+                                                        end_color=headers_to_color[col_cells[0].value],
+                                                        fill_type="solid")
+
             # Display a success message in a message box
             messagebox.showinfo("Success", "The output file has been saved as: " + output_file)
 
     except Exception as e:
         messagebox.showerror("Error Process was Cancelled", str(e))
+
+# Initial State: The 'Cost' column in the active_supplier_df DataFrame is initially populated
+# with whatever values are in the 'Prev Contract' sheet in the 'Cost' column, if there are any.
+# This happens as a result of merging active_supplier_df with selected columns from prev_contract_df
+# on the 'IPN' column.
+
+# Updating from SND Sheet:
+
+# The code iterates through each row of the active_supplier_df DataFrame.
+# For each row, it tries to find a match for the 'PSoft Part' in the snd_df DataFrame using the 'Product ID' column.
+# If a match is found and the value from snd_df (specifically the second column, indexed as iloc[0, 1])
+# is not NaN (or empty), then the code updates the 'Cost' column of the active_supplier_df with this value.
+# If a matching value is found in snd_df, the code then continues to the next row in active_supplier_df
+# without checking the vpc_df. This is because the 'SND' sheet has priority; if a 'Cost' value is found there,
+# it will be used over any potential match in the 'VPC' sheet.
+# Updating from VPC Sheet:
+#
+# If no match was found in the snd_df or if the matching value was NaN, the code then tries to find a match
+# for the 'PSoft Part' in the vpc_df DataFrame using the 'PART ID' column.
+# If a match is found and the value from vpc_df (again the second column,
+# indexed as iloc[0, 1]) is not NaN (or empty), then the 'Cost' column of the active_supplier_df is
+# updated with this value.
+# Final State: After iterating through all rows, the 'Cost' column in the active_supplier_df will contain:
+#
+# The value from the snd_df if a match was found there.
+# If no match was found in snd_df or the matched value was NaN, it will contain the
+# value from vpc_df if a match was found there.
+# If no matches were found in either snd_df or vpc_df (or both had NaN values),
+# it will retain the original value from the 'Prev Contract' sheet.
+# So, in essence, the 'Cost' column in active_supplier_df is being
+# populated with the most recent and relevant data from either snd_df or vpc_df, but
+# will retain its original value if no relevant updates are found in those two DataFrames.
