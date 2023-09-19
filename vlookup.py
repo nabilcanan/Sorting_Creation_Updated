@@ -3,6 +3,7 @@ import pandas as pd
 from openpyxl.styles import PatternFill
 # from openpyxl.styles import Alignment
 import numpy as np
+from openpyxl.utils import get_column_letter
 
 
 def perform_vlookup():
@@ -83,6 +84,28 @@ def perform_vlookup():
                 # Grabbing the workbook and the desired sheet
                 workbook = writer.book
                 sheet = workbook['Active Supplier Contracts']
+
+                # Find the columns for 'Price_x', 'Cost', and 'GP%'
+                price_x_col = None
+                cost_col = None
+                gp_col = None
+
+                for col_num, col_cells in enumerate(sheet.columns, start=1):
+                    if col_cells[0].value == 'Price_x':
+                        price_x_col = col_num
+                    elif col_cells[0].value == 'Cost':
+                        cost_col = col_num
+                    elif col_cells[0].value == 'GP%':
+                        gp_col = col_num
+
+                # Check if all the required columns were found
+                if price_x_col and cost_col and gp_col:
+                    for row in range(2, sheet.max_row + 1):  # Assuming row 1 is the header, so we start from row 2
+                        gp_cell = f"{get_column_letter(gp_col)}{row}"
+                        price_x_cell = f"{get_column_letter(price_x_col)}{row}"
+                        cost_cell = f"{get_column_letter(cost_col)}{row}"
+                        formula = f"=IF({price_x_cell}=0,0,({price_x_cell} - {cost_cell}) / {price_x_cell})"
+                        sheet[gp_cell] = formula
 
                 headers_to_color = {
                     'Price': "0000FFFF",
