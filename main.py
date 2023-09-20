@@ -16,8 +16,7 @@ warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 
 
 def open_readme_link():
-    webbrowser.open('https://github.com/nabilcanan/Sorting_Creation_Updated/blob/main/README.md',
-                    new=2)
+    webbrowser.open('https://github.com/nabilcanan/Sorting_Creation_Updated/blob/main/README.md', new=2)
 
 
 class ExcelSorter:
@@ -25,7 +24,7 @@ class ExcelSorter:
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files And Performing VlookUp")
         self.window.configure(bg="white")
-        self.window.geometry("883x600")  # Usually 600 for normal wundow size
+        self.window.geometry("815x600")  # Usually 600 for normal wundow size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -94,13 +93,6 @@ class ExcelSorter:
         run_queries_button = ttk.Button(frame, text="Run Queries", command=new_function, style="TButton")
         run_queries_button.pack(pady=10)
 
-        description_label = ttk.Label(frame, text="Once you've saved all your files in the designated location\n"
-                                                  " you can use the next set of buttons to sort every query we ran",
-                                      font=("Times New Roman",
-                                            18, "underline"),
-                                      background="white")
-        description_label.pack(anchor='center')
-
         sort_award_button = ttk.Button(frame, text="Sort Award File", command=self.sort_award_file,
                                        style="TButton")
         sort_award_button.pack(pady=10)
@@ -122,8 +114,8 @@ class ExcelSorter:
 
         add_instructions_for_active_contracts_file = ttk.Label(
             frame,
-            text="For the 'Merge Files and Create 'Lost Items' Sheet' button will allow you to merge \n"
-                 "your files accordingly now that they are sorted.\n"
+            text="The 'Merge Files and Create 'Lost Items' Sheet' button allows you to\n"
+                 "bring those sorted files all together accordingly into one workbook.\n"
                  "Order to Select Files:\n 1. Current Contract\n "
                  "2. Previous Weeks Contract\n 3. Awards File 4. Backlog File\n "
                  "5. Sales History File\n 6. SND File 7. VPC File\n  8. Finally Running File\n"
@@ -157,20 +149,25 @@ class ExcelSorter:
                                             command=perform_vlookup, style="TButton")
         perform_vlookup_button.pack(pady=10)
 
-        description_label = ttk.Label(frame, text="Once you completed the VLOOKUP, the last step is to add the latest\n"
-                                                  "Running 30 Day File.\n"
-                                                  "Select the Files in This order:\n"
-                                                  "1. The file where we are adding the Running File.\n"
-                                                  "2. The latest verion of the Running file.",
-                                      font=("Times New Roman", 18),
-                                      background="white")
-        description_label.pack(anchor='center')
+        add_instructions_for_active_contracts_file = ttk.Label(
+            frame,
+            text="For the 'Add Latest Running File' button\n"
+                 "Select the Files in This order:\n"
+                 "1. The file where we are adding the Running File.\n"
+                 "2. The latest verion of the Running file.",
+            font=("Times New Roman", 19),
+            background="white",
+            anchor="center",
+            justify="center",
+            wraplength=1000
+        )
+        add_instructions_for_active_contracts_file.pack(pady=2)
 
         add_running_file_button = ttk.Button(frame, text="Add Latest Running File",
                                              command=add_running_file_to_workbook, style="TButton")
         add_running_file_button.pack(pady=10)
 
-        description_label = ttk.Label(frame, text="Feek Free to Check out the Read me for Detailed Instructions",
+        description_label = ttk.Label(frame, text="Feel free to check out the ReadMme for more detailed instructions",
                                       font=("Times New Roman", 18),
                                       background="white")
         description_label.pack(anchor='center')
