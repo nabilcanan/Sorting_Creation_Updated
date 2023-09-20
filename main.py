@@ -82,9 +82,9 @@ class ExcelSorter:
         description_label.pack(pady=10)
 
         description_label = ttk.Label(frame, text="Select the Run Queries Button and don't move your mouse\n "
-                                                  "after you enter your Peoplesoft Login Credentials\n"
-                                                  "Make sure you notice the queries are run in this order\n"
-                                                  "1. Awards 2. Backlog 3. VPC 4. SND 5. Sales History",
+                                                  "    after you enter your Peoplesoft Login Credentials\n"
+                                                  "    Make sure you notice the queries are run in this order\n"
+                                                  "  1. Awards 2. Backlog 3. VPC 4. SND 5. Sales History",
                                       font=("Times New Roman",
                                             18, "bold"),
                                       background="white")
