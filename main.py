@@ -7,7 +7,8 @@ from tkinter import filedialog, messagebox
 import warnings
 from queries import new_function
 from vlookup import perform_vlookup
-from merge import merge_files_and_create_lost_items, add_running_file_to_workbook
+from merge import merge_files_and_create_lost_items
+from add_running import add_running_file_to_workbook
 import webbrowser
 
 warnings.simplefilter('ignore', UserWarning)
@@ -159,7 +160,7 @@ class ExcelSorter:
         description_label = ttk.Label(frame, text="Once you completed the VLOOKUP, the last step is to add the latest\n"
                                                   "Running 30 Day File",
                                       font=("Times New Roman",
-                                            18, "underline"),
+                                            18),
                                       background="white")
         description_label.pack(anchor='center')
 
