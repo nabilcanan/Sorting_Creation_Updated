@@ -170,6 +170,11 @@ class ExcelSorter:
                                              command=add_running_file_to_workbook, style="TButton")
         add_running_file_button.pack(pady=10)
 
+        description_label = ttk.Label(frame, text="Feek Free to Check out the Read me for Detailed Instructions",
+                                      font=("Times New Roman", 18),
+                                      background="white")
+        description_label.pack(anchor='center')
+
         readme_button = ttk.Button(frame, text="Open ReadMe",
                                    command=open_readme_link, style="TButton")
         readme_button.pack(pady=10)
