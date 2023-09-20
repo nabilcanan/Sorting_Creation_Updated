@@ -80,7 +80,7 @@ def perform_vlookup():
                 vpc_df.to_excel(writer, index=False, sheet_name='VPC')
                 backlog_df.to_excel(writer, index=False, sheet_name='Backlog')
                 sales_history_df.to_excel(writer, index=False, sheet_name='Sales History')
-                running_file_df.to_excel(writer, index=False, sheet_name='Price Increases')
+                running_file_df.to_excel(writer, index=False, sheet_name='Running File - 30 Day Notice Co')
 
                 # Grabbing the workbook and the desired sheet
                 workbook = writer.book
