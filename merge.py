@@ -1,33 +1,17 @@
 from tkinter import filedialog, messagebox
-
 import pandas as pd
-from openpyxl.reader.excel import load_workbook
+from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
-
-
-def select_file(file_type="Excel"):
-    print("Select File Function  called")
-
-    file_path = filedialog.askopenfilename(title=f"Select {file_type} file",
-                                           filetypes=(
-                                               ("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")),
-                                           initialdir="I:\Quotes\Partnership Sales - CM\Creation")
-
-    if file_path:
-        return file_path
-    else:
-        return None
 
 
 def merge_files_and_create_lost_items():
     print("merge_files_and_create_lost_items called")
-    file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC",
-                  "Running File - 30 Day Notice Contract Price Increase_Sager - COSTED"]
+    file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC"]
     file_paths = []
 
     for file_name in file_names:
         file_path = filedialog.askopenfilename(title="Select {} file".format(file_name),
-                                               initialdir="H:\Sorting_Creation_Updated")
+                                               initialdir="I:\Quotes\Partnership Sales - CM\Creation")
         if not file_path:
             messagebox.showerror("Error", "File selection cancelled.")
             return
@@ -70,3 +54,35 @@ def merge_files_and_create_lost_items():
                             "are not in the current weeks file.")
     except Exception as e:
         messagebox.showerror("Error", str(e))
+
+
+def add_running_file_to_workbook():
+    print("add_running_file_to_workbook called")
+
+    # Ask the user to select the workbook to which the Running File data should be added
+    workbook_file_path = filedialog.askopenfilename(title="Select the workbook to add the Running File data",
+                                                    filetypes=[("Excel files", "*.xlsx;*.xls")],
+                                                    initialdir="I:\Quotes\Partnership Sales - CM\Creation")
+    if not workbook_file_path:
+        messagebox.showerror("Error", "Workbook selection cancelled.")
+        return
+
+    special_file_name = "Running File - 30 Day Notice Contract Price Increase_Sager - COSTED"
+    running_file_path = filedialog.askopenfilename(title="Select {} file".format(special_file_name),
+                                                   initialdir="I:\Quotes\Partnership Sales - CM\Creation")
+    if not running_file_path:
+        messagebox.showerror("Error", "File selection for Running File cancelled.")
+        return
+
+    # Load the selected workbook and add the running file data
+    selected_workbook = load_workbook(workbook_file_path)
+    running_data = pd.read_excel(running_file_path)
+    running_sheet = selected_workbook.create_sheet(title=special_file_name)
+    for r in dataframe_to_rows(running_data, index=False, header=True):
+        running_sheet.append(r)
+
+    try:
+        selected_workbook.save(workbook_file_path)
+        messagebox.showinfo("Success!", "Running File data added successfully.")
+    except Exception as e:
+        messagebox.showerror("Error", "Failed to add Running File. Error: " + str(e))

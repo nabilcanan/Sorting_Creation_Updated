@@ -21,7 +21,7 @@ def perform_vlookup():
         vpc_df = pd.read_excel(contract_file, sheet_name='VPC')
         backlog_df = pd.read_excel(contract_file, sheet_name='Backlog')
         sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History')
-        running_file_df = pd.read_excel(contract_file, sheet_name='Running File - 30 Day Notice Co')
+        # running_file_df = pd.read_excel(contract_file, sheet_name='Running File - 30 Day Notice Co')
 
         # Merge on 'IPN' to get the 'PSoft Part' column
         active_supplier_df = active_supplier_df.merge(
@@ -80,7 +80,7 @@ def perform_vlookup():
                 vpc_df.to_excel(writer, index=False, sheet_name='VPC')
                 backlog_df.to_excel(writer, index=False, sheet_name='Backlog')
                 sales_history_df.to_excel(writer, index=False, sheet_name='Sales History')
-                running_file_df.to_excel(writer, index=False, sheet_name='Running File - 30 Day Notice Co')
+                # running_file_df.to_excel(writer, index=False, sheet_name='Running File - 30 Day Notice Co')
 
                 # Grabbing the workbook and the desired sheet
                 workbook = writer.book

@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox
 import warnings
 from queries import new_function
 from vlookup import perform_vlookup
-from merge import merge_files_and_create_lost_items
+from merge import merge_files_and_create_lost_items, add_running_file_to_workbook
 import webbrowser
 
 warnings.simplefilter('ignore', UserWarning)
@@ -155,6 +155,17 @@ class ExcelSorter:
         perform_vlookup_button = ttk.Button(frame, text="Perform VLook-Up to new file",
                                             command=perform_vlookup, style="TButton")
         perform_vlookup_button.pack(pady=10)
+
+        description_label = ttk.Label(frame, text="Once you completed the VLOOKUP, the last step is to add the latest\n"
+                                                  "Running 30 Day File",
+                                      font=("Times New Roman",
+                                            18, "underline"),
+                                      background="white")
+        description_label.pack(anchor='center')
+
+        add_running_file_button = ttk.Button(frame, text="Add Latest Running File",
+                                             command=add_running_file_to_workbook, style="TButton")
+        add_running_file_button.pack(pady=10)
 
         readme_button = ttk.Button(frame, text="Open ReadMe",
                                    command=open_readme_link, style="TButton")
