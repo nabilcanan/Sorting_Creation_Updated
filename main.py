@@ -83,7 +83,7 @@ class ExcelSorter:
 
         description_label = ttk.Label(frame, text="Select the Run Queries Button and don't move your mouse\n "
                                                   "after you enter your Peoplesoft Login Credentials\n"
-                                                  "Make sure you notice the queries are ran in this order\n"
+                                                  "Make sure you notice the queries are run in this order\n"
                                                   "1. Awards 2. Backlog 3. VPC 4. SND 5. Sales History",
                                       font=("Times New Roman",
                                             18, "bold"),
@@ -118,7 +118,7 @@ class ExcelSorter:
                  "bring those sorted files all together accordingly into one workbook.\n"
                  "Order to Select Files:\n 1. Current Contract\n "
                  "2. Previous Weeks Contract\n 3. Awards File 4. Backlog File\n "
-                 "5. Sales History File\n 6. SND File 7. VPC File\n  8. Finally Running File\n"
+                 "5. Sales History File\n 6. SND File 7. VPC File\n"
                  "You will get a success message at the end",
             font=("Times New Roman", 19),
             background="white",
@@ -167,7 +167,7 @@ class ExcelSorter:
                                              command=add_running_file_to_workbook, style="TButton")
         add_running_file_button.pack(pady=10)
 
-        description_label = ttk.Label(frame, text="Feel free to check out the ReadMme for more detailed instructions",
+        description_label = ttk.Label(frame, text="Feel free to check out the ReadMe for more detailed instructions",
                                       font=("Times New Roman", 18),
                                       background="white")
         description_label.pack(anchor='center')
