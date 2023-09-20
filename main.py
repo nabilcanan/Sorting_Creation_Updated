@@ -158,9 +158,11 @@ class ExcelSorter:
         perform_vlookup_button.pack(pady=10)
 
         description_label = ttk.Label(frame, text="Once you completed the VLOOKUP, the last step is to add the latest\n"
-                                                  "Running 30 Day File",
-                                      font=("Times New Roman",
-                                            18),
+                                                  "Running 30 Day File.\n"
+                                                  "Select the Files in This order:\n"
+                                                  "1. The file where we are adding the Running File.\n"
+                                                  "2. The latest verion of the Running file.",
+                                      font=("Times New Roman", 18),
                                       background="white")
         description_label.pack(anchor='center')
 
