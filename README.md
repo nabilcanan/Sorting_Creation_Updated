@@ -16,36 +16,46 @@ The "Partnership Sort Creation" program is designed to sort the creation files f
 - `image`
 
 
-## Functionality
+# Functionality For Buttons
+_______________________________________________________________________________________________________________
 
-1. Sorting Creation Files(Sort Awards, Backlog, Sales History, etc):
-   - The program allows you to sort different types of creation files, such as Award, Backlog, Sales History, SND, and VPC files.
-   - Sorting is performed based on columns we need sorted that was in our Creation Instructions.
-   - The sorted files are saved within the same file.
 
-2. Adding Files to Active Contract File (Merge and Create 'Lost Items' Sheet):
-   - The program facilitates merging multiple files into the Active Contract File.
-   - The files include the Active Supplier Contracts, Prev Contract, Awards, Backlog, Sales History, SND, and VPC files.
-   - The program adds these files as separate sheets in the Active Contract File.
-   - Additionally, it identifies and creates a "Lost Items" sheet that shows missing items from the previous to the active contract.
+- For the **Run Queries Button** please enter your Peoplesoft Credentials & do NOT move your mouse until all the queries have been run
 
-3. Updating Active Contract File with VLOOK-UP Function:
-   - Select the new file we created in our last button with all the files merged and your vlookup will occur
-   - Once the process is complete you can choose where to save your new file
-   
-For the **Merge Files and Create 'Lost Items' Sheet button** select the files in this order:
-1. current week
-2. last week
-3. awards
-4. backlog
-5. sales
-6. snd
-7. vpc
-8. running file 
+_______________________________________________________________________________________________________________
 
-For the vlookup button select in this order 
-1. All you need to select for this button is the new workbook we just created with the lost items sheet. 
-2. Then choose where you'd like to save the final workbook with all your data. 
+- For the **Sort Awards Button** please select the awards file you have from your Run Queries
+- For the **Sort Backlog Button** please select the backlog file you have from your Run Queries
+- For the **Sort Sales History Button** please select the sales history file you have from your Run Queries
+- For the **Sort SND File Button** please select the SND file you have from your Run Queries
+- For the **Sort VPC Button** please select the VPC file you have from your Run Queries
+
+_______________________________________________________________________________________________________________
+
+- For the **Merge Files and Create** 'Lost Items' Sheet button** select the files in this order:
+
+1. Current Weeks Creation Contract file
+2. Last Week's Creation Contract File
+3. Sorted Awards File
+4. Sorted Backlog File
+5. Sorted Sales History File
+6. Sorted SND File
+7. Sorted VPC File
+8. Latest 30 Day Running File
+_______________________________________________________________________________________________________________
+
+- For the **Perform VLook-Up** button select in this order 
+
+1. All you need to select for this button is the new workbook we just created with the lost items sheet, and where we have all of our combined sorted sheets. 
+2. Once the process is complete you will be prompt to save your new file.
+
+_______________________________________________________________________________________________________________
+
+- For the **Add Latest Running File** button select the files in this order
+
+1. The File where we need to add the Running File (In your case it will be the file where we have our lost items, the sorted sheets, and where the VLOOKUP was completed.)
+2. The Latest Running 30 Day File that can be found in our Creation folder
+_______________________________________________________________________________________________________________
 
 There is a video on this program working step by step in the images-video folder, to access just clock the folder in the repository, then clock the video (mkv file) and select 'view raw'
 This will download the video for you to view.

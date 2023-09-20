@@ -1,7 +1,6 @@
 from tkinter import filedialog, messagebox
 import pandas as pd
 from openpyxl.styles import PatternFill
-# from openpyxl.styles import Alignment
 import numpy as np
 from openpyxl.utils import get_column_letter
 
