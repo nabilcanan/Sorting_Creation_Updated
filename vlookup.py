@@ -11,7 +11,7 @@ def perform_vlookup():
         contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup",
                                                    initialdir="I:\Quotes\Partnership Sales - CM\Creation")
 
-        # Load all the sheets
+        # Load all the sheets, these are being loaded for the vlookup function and updating our SND and VPC Cost's
         active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
         prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0)
         lost_items_df = pd.read_excel(contract_file, sheet_name='Lost Items')
@@ -20,9 +20,8 @@ def perform_vlookup():
         vpc_df = pd.read_excel(contract_file, sheet_name='VPC')
         backlog_df = pd.read_excel(contract_file, sheet_name='Backlog')
         sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History')
-        # running_file_df = pd.read_excel(contract_file, sheet_name='Running File - 30 Day Notice Co')
 
-        # Merge on 'IPN' to get the 'PSoft Part' column
+        # Merge on 'IPN' to get the 'PSoft Part' column, these columns being brought in is what we are using for the merge
         active_supplier_df = active_supplier_df.merge(
             prev_contract_df[['IPN', "Price", 'PSoft Part', "Prev Contract MPN", "Prev Contract Price", "MPN Match",
                               "Price Match MPN",
@@ -79,7 +78,6 @@ def perform_vlookup():
                 vpc_df.to_excel(writer, index=False, sheet_name='VPC')
                 backlog_df.to_excel(writer, index=False, sheet_name='Backlog')
                 sales_history_df.to_excel(writer, index=False, sheet_name='Sales History')
-                # running_file_df.to_excel(writer, index=False, sheet_name='Running File - 30 Day Notice Co')
 
                 # Grabbing the workbook and the desired sheet
                 workbook = writer.book

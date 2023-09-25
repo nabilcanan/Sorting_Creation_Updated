@@ -233,7 +233,7 @@ class ExcelSorter:
         if file_path:
             self.sort_excel(file_path, ['PART ID', 'VPC Cost'], [True, False], "VPC")
 
-    @staticmethod
+    @staticmethod  # This is for some exceptions where we have certain numbers in our Excel file
     def sort_excel(file_path, sort_columns, ascending_order, file_type=""):
         if not sort_columns:
             messagebox.showerror("Error", "No columns selected for sorting.")
