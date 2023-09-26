@@ -22,9 +22,9 @@ def open_readme_link():
 class ExcelSorter:
     def __init__(self):
         self.window = tk.Tk()
-        self.window.title("Sorting Creation Files And Performing VlookUp")
+        self.window.title("Sorting Creation Files And Performing LookUp")
         self.window.configure(bg="white")
-        self.window.geometry("815x600")  # Usually 600 for normal wundow size
+        self.window.geometry("815x600")  # Usually 600 for normal window size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -37,7 +37,7 @@ class ExcelSorter:
         self.inner_frame = ttk.Frame(self.canvas)
         self.canvas.create_window((self.window.winfo_width() / 2, 0), window=self.inner_frame, anchor="n")
 
-        # Configure the canvaZs's scroll-region to encompass the frame
+        # Configure the canvasAs's scroll-region to encompass the frame
         self.inner_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
         # Pack the scrollbar, making sure it sticks to the right side
@@ -154,7 +154,7 @@ class ExcelSorter:
             text="For the 'Add Latest Running File' button\n"
                  "Select the Files in This order:\n"
                  "1. The file where we are adding the Running File.\n"
-                 "2. The latest verion of the Running file.",
+                 "2. The latest version of the Running file.",
             font=("Times New Roman", 19),
             background="white",
             anchor="center",
@@ -202,7 +202,7 @@ class ExcelSorter:
         else:
             return None
 
-    # Here is where we will sort all the files we ran our querries from
+    # Here is where we will sort all the files we ran our queries from
     def sort_award_file(self):
         print("Sort Award File called")
         file_path = self.select_file("Awards")
