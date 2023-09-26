@@ -34,7 +34,7 @@ def click_button_image(image_path, confidence=0.8, offset=0, double_click_requir
         print(f"Image '{image_path}' not found on screen!")
 
 
-def get_user_credentials():  # This will gahter the user credentials we need to log in to peoplesoft
+def get_user_credentials():  # This will gaiter the user credentials we need to log in to peoplesoft
     root = Tk()
     root.withdraw()
 
@@ -121,13 +121,13 @@ def new_function():
         app = Application().connect(title_re="Application Designer - .*")
         app.top_window().menu_select("Go->PeopleTools->Query")
         app.top_window().close()
-        time.sleep(5)  # ORIGINALLY 5
+        time.sleep(8)  # ORIGINALLY 5
 
         # Open Query
         query_app = Application().connect(title="Untitled - Query")  # Modified line
         toolbar = query_app.top_window().child_window(class_name="ToolbarWindow32")
         toolbar.button(1).click_input()
-        time.sleep(5)  # ORIGINALLY 5
+        time.sleep(8)  # ORIGINALLY 5
 
         open_query_app = Application().connect(title="Open Query")
         open_query_window = open_query_app['Open Query']
@@ -169,8 +169,8 @@ def new_function():
                 print("Closing query window...")
                 query_app.window(title_re=".*Query.*").close()
                 print("Query window closed.")
-        except Exception as e:
-            print(f"Error while closing the query window: {str(e)}")
+        except Exception as es:
+            print(f"Error while closing the query window: {str(es)}")
 
     try:
         # Use a counter to keep track of completed queries
