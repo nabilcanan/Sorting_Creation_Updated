@@ -21,7 +21,8 @@ def perform_vlookup():
         backlog_df = pd.read_excel(contract_file, sheet_name='Backlog')
         sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History')
 
-        # Merge on 'IPN' to get the 'PSoft Part' column, these columns being brought in is what we are using for the merge
+        # Merge on 'IPN' to get the 'PSoft Part' column, these columns being brought in is what we are using for the
+        # merge
         active_supplier_df = active_supplier_df.merge(
             prev_contract_df[['IPN', "Price", 'PSoft Part', "Prev Contract MPN", "Prev Contract Price", "MPN Match",
                               "Price Match MPN",
@@ -83,27 +84,42 @@ def perform_vlookup():
                 workbook = writer.book
                 sheet = workbook['Active Supplier Contracts']
 
-                # This code until the headers_to_color it the formula we incorporated to calculate GP %
-                # Its (Resale Price - Cost) / Resale Price
-                # Find the columns for 'Price_x', 'Cost', and 'GP%'
-                price_x_col = None
-                cost_col = None
-                gp_col = None
+                # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'
+                price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col = None, None, None, None, None, None
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
-                    if col_cells[0].value == 'Price_x':
+                    col_val = col_cells[0].value  # header value in current column
+                    if col_val == 'Price_x':
                         price_x_col = col_num
-                    elif col_cells[0].value == 'Cost':
+                    elif col_val == 'Cost':
                         cost_col = col_num
-                    elif col_cells[0].value == 'GP%':
+                    elif col_val == 'GP%':
                         gp_col = col_num
+                    elif col_val == 'Cost Exp Date':
+                        date_col = col_num
+                    elif col_val == 'Award Date':
+                        award_date_col = col_num
+                    elif col_val == 'Last Update Date':
+                        last_update_date_col = col_num
 
-                # Check if all the required columns were found
-                if price_x_col and cost_col and gp_col:
+                # Check if all the required columns were found and apply formatting
+                if all([price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col]):
                     for row in range(2, sheet.max_row + 1):  # Assuming row 1 is the header, so we start from row 2
                         gp_cell = f"{get_column_letter(gp_col)}{row}"
                         price_x_cell = f"{get_column_letter(price_x_col)}{row}"
                         cost_cell = f"{get_column_letter(cost_col)}{row}"
+                        date_cell = f"{get_column_letter(date_col)}{row}"
+                        award_date_cell = f"{get_column_letter(award_date_col)}{row}"
+                        last_update_date_cell = f"{get_column_letter(last_update_date_col)}{row}"
+
+                        # Format the cells
+                        sheet[gp_cell].number_format = '0.00%'  # GP% as percent
+                        sheet[cost_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
+                        sheet[date_cell].number_format = 'MM/DD/YYYY'  # Date as MM/DD/YYYY
+                        sheet[award_date_cell].number_format = 'MM/DD/YYYY'  # Award Date as MM/DD/YYYY
+                        sheet[last_update_date_cell].number_format = 'MM/DD/YYYY'  # Last Update Date as MM/DD/YYYY
+
+                        # Apply formula to GP%
                         formula = f"=IF({price_x_cell}=0,0,({price_x_cell} - {cost_cell}) / {price_x_cell})"
                         sheet[gp_cell] = formula
 

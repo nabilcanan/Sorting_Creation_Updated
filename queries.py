@@ -160,7 +160,7 @@ def new_function():
                 # Look for the image and click it
                 click_button_image(image_path_run_to_excel)
                 run_to_excel_clicked = True
-                time.sleep(5)  # Wait for 20 seconds after clicking
+                time.sleep(15)  # Wait for 20 seconds after clicking
 
         click_run_to_excel()
 
