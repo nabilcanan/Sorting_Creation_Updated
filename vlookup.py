@@ -22,17 +22,19 @@ def perform_vlookup():
         sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History')
 
         # Merge on 'IPN' to get the 'PSoft Part' column, these columns being brought in is what we are using for the
+
         # merge
         active_supplier_df = active_supplier_df.merge(
-            prev_contract_df[['IPN', "Price", 'PSoft Part', "Prev Contract MPN", "Prev Contract Price", "MPN Match",
-                              "Price Match MPN",
-                              "LAST WEEK Contract Change", "Contract Change", "count",
-                              "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
-                              "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
-                              "Corp Awd Loaded", "90 DAY PI - NEW PRICE", "PI SENT DATE",
-                              "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
-                              "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "DIFF LW", "LW Cost",
-                              "LW Cost Note", "LW Cost Exp Date", "Review Note"]], on='IPN', how='left')
+            prev_contract_df[
+                ['IPN', "Price_x", "Price_y", 'PSoft Part', "Prev Contract MPN", "Prev Contract Price", "MPN Match",
+                 "Price Match MPN",
+                 "LAST WEEK Contract Change", "Contract Change", "count",
+                 "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
+                 "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
+                 "Corp Awd Loaded", "90 DAY PI - NEW PRICE", "PI SENT DATE",
+                 "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
+                 "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "DIFF LW", "LW Cost",
+                 "LW Cost Note", "LW Cost Exp Date", "Review Note"]], on='IPN', how='left')
 
         # Iterate through each row in the active_supplier_df to look for a match in SND and VPC
         for idx, row in active_supplier_df.iterrows():
@@ -54,13 +56,13 @@ def perform_vlookup():
         tolerance = 0.01  # you can set it to any value you deem fit
 
         active_supplier_df['Contract Change'] = np.where(
-            abs(active_supplier_df['Price_x'] - active_supplier_df['Price_y']) <= tolerance,
+            abs(active_supplier_df['Price'] - active_supplier_df['Price_x']) <= tolerance,
             'No Change',
-            np.where(active_supplier_df['Price_x'] > active_supplier_df['Price_y'],
+            np.where(active_supplier_df['Price'] > active_supplier_df['Price_x'],
                      'Price Increase',
-                     np.where(active_supplier_df['Price_x'] < active_supplier_df['Price_y'],
+                     np.where(active_supplier_df['Price'] < active_supplier_df['Price_x'],
                               'Price Decrease',
-                              np.where(pd.isna(active_supplier_df['Price_y']),
+                              np.where(pd.isna(active_supplier_df['Price_x']),
                                        'New Item', 'Unknown')))
         )
 
@@ -151,35 +153,3 @@ def perform_vlookup():
 
     except Exception as e:
         messagebox.showerror("Error Process was Cancelled", str(e))
-
-# Initial State: The 'Cost' column in the active_supplier_df DataFrame is initially populated
-# with whatever values are in the 'Prev Contract' sheet in the 'Cost' column, if there are any.
-# This happens as a result of merging active_supplier_df with selected columns from prev_contract_df
-# on the 'IPN' column.
-
-# Updating from SND Sheet:
-
-# The code iterates through each row of the active_supplier_df DataFrame.
-# For each row, it tries to find a match for the 'PSoft Part' in the snd_df DataFrame using the 'Product ID' column.
-# If a match is found and the value from snd_df (specifically the second column, indexed as iloc[0, 1])
-# is not NaN (or empty), then the code updates the 'Cost' column of the active_supplier_df with this value.
-# If a matching value is found in snd_df, the code then continues to the next row in active_supplier_df
-# without checking the vpc_df. This is because the 'SND' sheet has priority; if a 'Cost' value is found there,
-# it will be used over any potential match in the 'VPC' sheet.
-# Updating from VPC Sheet:
-#
-# If no match was found in the snd_df or if the matching value was NaN, the code then tries to find a match
-# for the 'PSoft Part' in the vpc_df DataFrame using the 'PART ID' column.
-# If a match is found and the value from vpc_df (again the second column,
-# indexed as iloc[0, 1]) is not NaN (or empty), then the 'Cost' column of the active_supplier_df is
-# updated with this value.
-# Final State: After iterating through all rows, the 'Cost' column in the active_supplier_df will contain:
-#
-# The value from the snd_df if a match was found there.
-# If no match was found in snd_df or the matched value was NaN, it will contain the
-# value from vpc_df if a match was found there.
-# If no matches were found in either snd_df or vpc_df (or both had NaN values),
-# it will retain the original value from the 'Prev Contract' sheet.
-# So, in essence, the 'Cost' column in active_supplier_df is being
-# populated with the most recent and relevant data from either snd_df or vpc_df, but
-# will retain its original value if no relevant updates are found in those two DataFrames.
