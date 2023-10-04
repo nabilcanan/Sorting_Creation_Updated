@@ -62,8 +62,7 @@ def perform_vlookup():
                      'Price Increase',
                      np.where(active_supplier_df['Price'] < active_supplier_df['Price_x'],
                               'Price Decrease',
-                              np.where(pd.isna(active_supplier_df['Price_x']),
-                                       'New Item', 'Unknown')))
+                              'New Item'))
         )
 
         # Ask the user for the output file path
