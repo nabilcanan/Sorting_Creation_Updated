@@ -14,6 +14,19 @@ def perform_vlookup():
         # Load all the sheets, these are being loaded for the vlookup function and updating our SND and VPC Cost's
         active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
         prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0)
+
+        # Check if 'Price' exists in prev_contract_df
+        if 'Price' not in prev_contract_df.columns:
+            raise ValueError("'Price' column not found in the prev_contract_df DataFrame.")
+
+        # Merge using 'Price' from prev_contract_df and rename it to 'Price_x' in the resulting dataframe
+        active_supplier_df = active_supplier_df.merge(prev_contract_df[['IPN', 'Price']], on='IPN', how='left').rename(
+            columns={'Price': 'Price_x'})
+
+        # After this merge, active_supplier_df should have 'Price_x'. Validate this:
+        if 'Price_x' not in active_supplier_df.columns:
+            raise ValueError("'Price_x' column was not successfully merged into active_supplier_df.")
+
         lost_items_df = pd.read_excel(contract_file, sheet_name='Lost Items')
         awards_df = pd.read_excel(contract_file, sheet_name='Awards')
         snd_df = pd.read_excel(contract_file, sheet_name='SND')
@@ -26,15 +39,15 @@ def perform_vlookup():
         # merge
         active_supplier_df = active_supplier_df.merge(
             prev_contract_df[
-                ['IPN', "Price_x", "Price_y", 'PSoft Part', "Prev Contract MPN", "Prev Contract Price", "MPN Match",
+                ['IPN', "Price", 'PSoft Part', "Prev Contract MPN", "Prev Contract Price", "MPN Match",
                  "Price Match MPN",
                  "LAST WEEK Contract Change", "Contract Change", "count",
                  "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
                  "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
                  "Corp Awd Loaded", "90 DAY PI - NEW PRICE", "PI SENT DATE",
                  "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
-                 "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ", "DIFF LW", "LW Cost",
-                 "LW Cost Note", "LW Cost Exp Date", "Review Note"]], on='IPN', how='left')
+                 "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
+                 "Review Note"]], on='IPN', how='left')
 
         # Iterate through each row in the active_supplier_df to look for a match in SND and VPC
         for idx, row in active_supplier_df.iterrows():
