@@ -11,21 +11,9 @@ def perform_vlookup():
         contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup",
                                                    initialdir="I:\Quotes\Partnership Sales - CM\Creation")
 
-        # Load all the sheets, these are being loaded for the vlookup function and updating our SND and VPC Cost's
+        # Load 'Active Supplier Contracts' and 'Prev Contract' sheets
         active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
         prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0)
-
-        # Check if 'Price' exists in prev_contract_df
-        if 'Price' not in prev_contract_df.columns:
-            raise ValueError("'Price' column not found in the prev_contract_df DataFrame.")
-
-        # Merge using 'Price' from prev_contract_df and rename it to 'Price_x' in the resulting dataframe
-        active_supplier_df = active_supplier_df.merge(prev_contract_df[['IPN', 'Price']], on='IPN', how='left').rename(
-            columns={'Price': 'Price_x'})
-
-        # After this merge, active_supplier_df should have 'Price_x'. Validate this:
-        if 'Price_x' not in active_supplier_df.columns:
-            raise ValueError("'Price_x' column was not successfully merged into active_supplier_df.")
 
         lost_items_df = pd.read_excel(contract_file, sheet_name='Lost Items')
         awards_df = pd.read_excel(contract_file, sheet_name='Awards')
@@ -34,12 +22,13 @@ def perform_vlookup():
         backlog_df = pd.read_excel(contract_file, sheet_name='Backlog')
         sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History')
 
-        # Merge on 'IPN' to get the 'PSoft Part' column, these columns being brought in is what we are using for the
+        # Rename the 'Price' column from prev_contract_df to 'LW PRICE' in active_supplier_df
+        prev_contract_df.rename(columns={'Price': 'LW PRICE'}, inplace=True)
 
         # merge
         active_supplier_df = active_supplier_df.merge(
             prev_contract_df[
-                ['IPN', "Price", 'PSoft Part', "Prev Contract MPN", "Prev Contract Price", "MPN Match",
+                ['IPN', 'LW PRICE', 'PSoft Part', "Prev Contract MPN", "MPN Match",
                  "Price Match MPN",
                  "LAST WEEK Contract Change", "Contract Change", "count",
                  "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
@@ -66,14 +55,15 @@ def perform_vlookup():
 
         print(active_supplier_df.columns)
 
+        # The Contract Change comparison is done between 'Price' and 'LW PRICE'.
         tolerance = 0.01  # you can set it to any value you deem fit
 
         active_supplier_df['Contract Change'] = np.where(
-            abs(active_supplier_df['Price'] - active_supplier_df['Price_x']) <= tolerance,
+            abs(active_supplier_df['Price'] - active_supplier_df['LW PRICE']) <= tolerance,
             'No Change',
-            np.where(active_supplier_df['Price'] > active_supplier_df['Price_x'],
+            np.where(active_supplier_df['Price'] > active_supplier_df['LW PRICE'],
                      'Price Increase',
-                     np.where(active_supplier_df['Price'] < active_supplier_df['Price_x'],
+                     np.where(active_supplier_df['Price'] < active_supplier_df['LW PRICE'],
                               'Price Decrease',
                               'New Item'))
         )
@@ -103,7 +93,7 @@ def perform_vlookup():
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
                     col_val = col_cells[0].value  # header value in current column
-                    if col_val == 'Price_x':
+                    if col_val == 'Price':
                         price_x_col = col_num
                     elif col_val == 'Cost':
                         cost_col = col_num
