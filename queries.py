@@ -149,7 +149,7 @@ def new_function():
         constant_app = Application().connect(title="Constant")
         constant_app.window(title="Constant").child_window(class_name="Edit").set_text("CREATION")
         constant_app.window(title="Constant").child_window(title="OK", class_name="Button").click_input()
-        # time.sleep(2)
+        time.sleep(2)
 
         # Marker to check if run_to_excel has been clicked
         run_to_excel_clicked = False
@@ -160,7 +160,7 @@ def new_function():
                 # Look for the image and click it
                 click_button_image(image_path_run_to_excel)
                 run_to_excel_clicked = True
-                time.sleep(15)  # Wait for 20 seconds after clicking
+                time.sleep(20)  # Wait for 20 seconds after clicking
 
         click_run_to_excel()
 

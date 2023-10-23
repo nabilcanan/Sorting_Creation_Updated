@@ -7,14 +7,13 @@ from openpyxl.utils import get_column_letter
 
 def perform_vlookup():
     try:
-        # Ask the user for the contract file paths
+        # Ask the user for the contract file
         contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup",
                                                    initialdir="I:\Quotes\Partnership Sales - CM\Creation")
 
         # Load 'Active Supplier Contracts' and 'Prev Contract' sheets
         active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
         prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0)
-
         lost_items_df = pd.read_excel(contract_file, sheet_name='Lost Items')
         awards_df = pd.read_excel(contract_file, sheet_name='Awards')
         snd_df = pd.read_excel(contract_file, sheet_name='SND')
@@ -74,7 +73,7 @@ def perform_vlookup():
 
         # Write all the DataFrames to the new Excel file in the specified order
         if output_file:
-            with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+            with (pd.ExcelWriter(output_file, engine='openpyxl') as writer):
                 active_supplier_df.to_excel(writer, index=False, sheet_name='Active Supplier Contracts')
                 prev_contract_df.to_excel(writer, index=False, sheet_name='Prev Contract')
                 lost_items_df.to_excel(writer, index=False, sheet_name='Lost Items')
@@ -89,7 +88,7 @@ def perform_vlookup():
                 sheet = workbook['Active Supplier Contracts']
 
                 # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'
-                price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col = None, None, None, None, None, None
+                price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col,pi_sent_date_col = None, None, None, None, None, None, None
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
                     col_val = col_cells[0].value  # header value in current column
@@ -105,9 +104,11 @@ def perform_vlookup():
                         award_date_col = col_num
                     elif col_val == 'Last Update Date':
                         last_update_date_col = col_num
+                    elif col_val == 'PI SENT DATE':
+                        pi_sent_date_col = col_num
 
                 # Check if all the required columns were found and apply formatting
-                if all([price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col]):
+                if all([price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, pi_sent_date_col]):
                     for row in range(2, sheet.max_row + 1):  # Assuming row 1 is the header, so we start from row 2
                         gp_cell = f"{get_column_letter(gp_col)}{row}"
                         price_x_cell = f"{get_column_letter(price_x_col)}{row}"
@@ -115,6 +116,7 @@ def perform_vlookup():
                         date_cell = f"{get_column_letter(date_col)}{row}"
                         award_date_cell = f"{get_column_letter(award_date_col)}{row}"
                         last_update_date_cell = f"{get_column_letter(last_update_date_col)}{row}"
+                        pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"
 
                         # Format the cells
                         sheet[gp_cell].number_format = '0.00%'  # GP% as percent
@@ -122,6 +124,7 @@ def perform_vlookup():
                         sheet[date_cell].number_format = 'MM/DD/YYYY'  # Date as MM/DD/YYYY
                         sheet[award_date_cell].number_format = 'MM/DD/YYYY'  # Award Date as MM/DD/YYYY
                         sheet[last_update_date_cell].number_format = 'MM/DD/YYYY'  # Last Update Date as MM/DD/YYYY
+                        sheet[pi_sent_date_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
 
                         # Apply formula to GP%
                         formula = f"=IF({price_x_cell}=0,0,({price_x_cell} - {cost_cell}) / {price_x_cell})"
