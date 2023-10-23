@@ -1,6 +1,6 @@
 from tkinter import filedialog, messagebox
 import pandas as pd
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Alignment
 import numpy as np
 from openpyxl.utils import get_column_letter
 
@@ -86,6 +86,19 @@ def perform_vlookup():
                 # Grabbing the workbook and the desired sheet
                 workbook = writer.book
                 sheet = workbook['Active Supplier Contracts']
+
+                # Freeze the top row
+                sheet.freeze_panes = 'A2'
+
+                # Freeze the column H2
+                sheet.freeze_panes = "H2"
+
+                # Turn on filters for the top row
+                sheet.auto_filter.ref = sheet.dimensions
+
+                # Wrap text for the first row
+                for cell in sheet["1:1"]:
+                    cell.alignment = Alignment(wrap_text=True)
 
                 # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'
                 price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col,pi_sent_date_col = None, None, None, None, None, None, None
