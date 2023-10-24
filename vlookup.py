@@ -9,7 +9,7 @@ def perform_vlookup():
     try:
         # Ask the user for the contract file
         contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup",
-                                                   initialdir="I:\Quotes\Partnership Sales - CM\Creation")
+                                                   initialdir="P:\Partnership_Python_Projects\Creation\test_001")
 
         # Load 'Active Supplier Contracts' and 'Prev Contract' sheets
         active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
@@ -35,7 +35,7 @@ def perform_vlookup():
                  "Corp Awd Loaded", "90 DAY PI - NEW PRICE", "PI SENT DATE",
                  "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
                  "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
-                 "Review Note"]], on='IPN', how='left')
+                 "Review Note", "LW Cost", "LW Quote#", "LW Cost Exp Date", "LW Review Note"]], on='IPN', how='left')
 
         # Iterate through each row in the active_supplier_df to look for a match in SND and VPC
         for idx, row in active_supplier_df.iterrows():
@@ -55,21 +55,25 @@ def perform_vlookup():
         print(active_supplier_df.columns)
 
         # The Contract Change comparison is done between 'Price' and 'LW PRICE'.
-        tolerance = 0.01  # you can set it to any value you deem fit
+        # tolerance = 0.01  # you can set it to any value you deem fit
 
         active_supplier_df['Contract Change'] = np.where(
-            abs(active_supplier_df['Price'] - active_supplier_df['LW PRICE']) <= tolerance,
-            'No Change',
-            np.where(active_supplier_df['Price'] > active_supplier_df['LW PRICE'],
-                     'Price Increase',
-                     np.where(active_supplier_df['Price'] < active_supplier_df['LW PRICE'],
-                              'Price Decrease',
-                              'New Item'))
+            active_supplier_df['LW PRICE'].isna(),  # Check if 'LW PRICE' is NaN or null
+            'New Item',
+            np.where(
+                active_supplier_df['Price'] == active_supplier_df['LW PRICE'],
+                'No Change',
+                np.where(
+                    active_supplier_df['Price'] > active_supplier_df['LW PRICE'],
+                    'Price Increase',
+                    'Price Decrease'  # Since we've covered all other scenarios, this can be the else condition.
+                )
+            )
         )
 
         # Ask the user for the output file path
         output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as",
-                                                   initialdir="I:\Quotes\Partnership Sales - CM\Creation")
+                                                   initialdir="P:\Partnership_Python_Projects\Creation\test_001")
 
         # Write all the DataFrames to the new Excel file in the specified order
         if output_file:
@@ -93,10 +97,10 @@ def perform_vlookup():
                 # Freeze the column H2
                 sheet.freeze_panes = "H2"
 
-                # Turn on filters for the top row
+                # Turn on filters for the top row only
                 sheet.auto_filter.ref = sheet.dimensions
 
-                # Wrap text for the first row
+                # Wrap text for the first row, makes it look neater
                 for cell in sheet["1:1"]:
                     cell.alignment = Alignment(wrap_text=True)
 
@@ -157,7 +161,13 @@ def perform_vlookup():
                     'EAU': "0000FFFF",
                     'MOQ': "0000FFFF",
                     'MPQ': "0000FFFF",
-                    'NCNR': "0000FFFF"
+                    'NCNR': "0000FFFF",
+                    'LW PRICE': "0000FFFF",
+                    'LW Cost': "FFFF00",
+                    'LW Quote#': "FFFF00",
+                    'LW Cost Exp Date': "FFFF00",
+                    'LW Review Note': "FFFF00"
+
                 }
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):

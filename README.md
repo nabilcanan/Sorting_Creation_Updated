@@ -1,6 +1,8 @@
 # Partnership Sort Creation
 
 The "Partnership Sort Creation" program is designed to sort the creation files for the week and perform various data operations within them. This program helps organize and consolidate the data for efficient processing.
+This program runs queries automatically from peoplesoft, sorts them once saved, merges multiple dataframes into one workbook, creates lost items sheet from one contract to the next, 
+does a V-lookup from one file to the next with the click of a button, then colors multiple headers accordingly, also freezes panes in Excel in the desired dimension, finally it adds the latest running file to any workbook 
 
 ## Requirements, these will need to be done by pip
 

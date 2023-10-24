@@ -22,9 +22,9 @@ def open_readme_link():
 class ExcelSorter:
     def __init__(self):
         self.window = tk.Tk()
-        self.window.title("Sorting Creation Files And Performing LookUp")
+        self.window.title("Sorting Creation Files And Performing VLookUp")
         self.window.configure(bg="white")
-        self.window.geometry("815x600")  # Usually 600 for normal window size
+        self.window.geometry("875x600")  # Usually 600 for normal window size
 
         # Create a canvas and a vertical scrollbar
         self.canvas = tk.Canvas(self.window)
@@ -65,27 +65,27 @@ class ExcelSorter:
 
     def create_widgets(self, frame):
         style = ttk.Style()
-        style.configure("TButton", font=("Times New Roman", 16, "bold"), width=60, height=2)
+        style.configure("TButton", font=("Rupee", 16, "bold"), width=60, height=2)
         style.map("TButton",
                   foreground=[('active', 'red')],
                   background=[('active', 'blue')])
         style.configure("TButton", background="white")  # Change the button background color to white
 
         title_label = ttk.Label(frame, text="Welcome Partnership Member!",
-                                font=("Times New Roman", 32, "underline"), background="white", foreground="#103d81")
+                                font=("Rupee", 32, "underline"), background="white", foreground="#103d81")
         title_label.pack(pady=10)
 
         description_label = ttk.Label(frame,
                                       text="This tool allows you to sort your Excel files for our Creation "
                                            "Contact",
-                                      font=("Times New Roman", 20, "underline"), background="white")
+                                      font=("Rupee", 20, "underline"), background="white")
         description_label.pack(pady=10)
 
         description_label = ttk.Label(frame, text="Select the Run Queries Button and don't move your mouse\n "
                                                   "    after you enter your Peoplesoft Login Credentials\n"
                                                   "    Make sure you notice the queries are run in this order\n"
                                                   "  1. Awards 2. Backlog 3. VPC 4. SND 5. Sales History",
-                                      font=("Times New Roman",
+                                      font=("Rupee",
                                             18, "bold"),
                                       background="white")
         description_label.pack(anchor='center')
@@ -120,7 +120,7 @@ class ExcelSorter:
                  "2. Previous Weeks Contract\n 3. Awards File 4. Backlog File\n "
                  "5. Sales History File\n 6. SND File 7. VPC File\n"
                  "You will get a success message at the end",
-            font=("Times New Roman", 19),
+            font=("Rupee", 19),
             background="white",
             anchor="center",
             justify="center",
@@ -137,7 +137,7 @@ class ExcelSorter:
             text="For the 'Perform VLOOKUP' button \n"
                  "1. Select the file where you now need your vlookup completed.\n"
                  "(This is the same file where all your files are now merged.) ",
-            font=("Times New Roman", 19),
+            font=("Rupee", 19),
             background="white",
             anchor="center",
             justify="center",
@@ -155,7 +155,7 @@ class ExcelSorter:
                  "Select the Files in This order:\n"
                  "1. The file where we are adding the Running File.\n"
                  "2. The latest version of the Running file.",
-            font=("Times New Roman", 19),
+            font=("Rupee", 19),
             background="white",
             anchor="center",
             justify="center",
@@ -168,7 +168,7 @@ class ExcelSorter:
         add_running_file_button.pack(pady=10)
 
         description_label = ttk.Label(frame, text="Feel free to check out the ReadMe for more detailed instructions",
-                                      font=("Times New Roman", 18),
+                                      font=("Rupee", 18),
                                       background="white")
         description_label.pack(anchor='center')
 
@@ -195,7 +195,7 @@ class ExcelSorter:
         file_path = filedialog.askopenfilename(title=f"Select {file_type} file",
                                                filetypes=(
                                                    ("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")),
-                                               initialdir="I:\Quotes\Partnership Sales - CM\Creation")
+                                               initialdir="P:\Partnership_Python_Projects\Creation\test_001")
 
         if file_path:
             return file_path
