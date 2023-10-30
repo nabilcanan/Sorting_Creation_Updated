@@ -1,3 +1,4 @@
+from datetime import datetime
 from tkinter import filedialog, messagebox
 import pandas as pd
 from openpyxl.styles import PatternFill, Alignment
@@ -115,7 +116,7 @@ def perform_vlookup(button_to_disable):
                     cell.alignment = Alignment(wrap_text=True)
 
                 # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'
-                price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col,pi_sent_date_col = None, None, None, None, None, None, None
+                price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, pi_sent_date_col = None, None, None, None, None, None, None
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
                     col_val = col_cells[0].value  # header value in current column
@@ -133,6 +134,31 @@ def perform_vlookup(button_to_disable):
                         last_update_date_col = col_num
                     elif col_val == 'PI SENT DATE':
                         pi_sent_date_col = col_num
+
+                    # Formatting for the "PI SENT DATE" column
+                    if pi_sent_date_col:
+                        for row in range(2, sheet.max_row + 1):
+                            pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"
+
+                            cell_value = sheet[pi_sent_date_cell].value
+
+                            # If cell value is '-2' or is an out-of-range date
+                            if cell_value == "-2" or str(cell_value) == "####" or cell_value is None:
+                                sheet[pi_sent_date_cell].value = ""
+                            else:
+                                try:
+                                    # Check if the value can be interpreted as a date
+                                    parsed_date = datetime.strptime(str(cell_value), "%Y-%m-%d %H:%M:%S")
+                                    if parsed_date.year < 1900 or parsed_date.year > 9999:  # Excel's date limits
+                                        sheet[pi_sent_date_cell].value = ""
+                                except ValueError:
+                                    sheet[pi_sent_date_cell].value = ""
+
+                    # Now apply the date format
+                    if pi_sent_date_col:
+                        for row in range(2, sheet.max_row + 1):
+                            pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"
+                            sheet[pi_sent_date_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
 
                 # Check if all the required columns were found and apply formatting
                 if all([price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, pi_sent_date_col]):
