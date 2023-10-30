@@ -4,7 +4,7 @@ from openpyxl.reader.excel import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 
-def add_running_file_to_workbook():
+def add_running_file_to_workbook(button_to_disable):
     print("add_running_file_to_workbook called")
 
     # Ask the user to select the workbook to which the Running File data should be added
@@ -36,5 +36,6 @@ def add_running_file_to_workbook():
     try:
         selected_workbook.save(workbook_file_path)
         messagebox.showinfo("Success!", "Running File data added successfully.")
+        button_to_disable.config(state="disabled")
     except Exception as e:
         messagebox.showerror("Error", "Failed to add Running File. Error: " + str(e))

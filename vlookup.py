@@ -5,7 +5,7 @@ import numpy as np
 from openpyxl.utils import get_column_letter
 
 
-def perform_vlookup():
+def perform_vlookup(button_to_disable):
     try:
         # Ask the user for the contract file
         contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup",
@@ -21,7 +21,14 @@ def perform_vlookup():
         backlog_df = pd.read_excel(contract_file, sheet_name='Backlog')
         sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History')
 
-        # Rename the 'Price' column from prev_contract_df to 'LW PRICE' in active_supplier_df
+        print("Loaded 'Active Supplier Contracts' sheet with shape:", active_supplier_df.shape)
+        print("Loaded 'Prev Contract' sheet with shape:", prev_contract_df.shape)
+
+        # Drop the 'LW PRICE' column if it exists in the 'Prev Contract' dataframe
+        if 'LW PRICE' in prev_contract_df.columns:
+            prev_contract_df.drop('LW PRICE', axis=1, inplace=True)
+
+        # Rename the 'Price' column from 'Prev Contract' dataframe to 'LW PRICE'
         prev_contract_df.rename(columns={'Price': 'LW PRICE'}, inplace=True)
 
         # merge
@@ -56,6 +63,9 @@ def perform_vlookup():
 
         # The Contract Change comparison is done between 'Price' and 'LW PRICE'.
         # tolerance = 0.01  # you can set it to any value you deem fit
+
+        print("Shape of active_supplier_df['Price']:", active_supplier_df['Price'].shape)
+        print("Shape of active_supplier_df['LW PRICE']:", active_supplier_df['LW PRICE'].shape)
 
         active_supplier_df['Contract Change'] = np.where(
             active_supplier_df['LW PRICE'].isna(),  # Check if 'LW PRICE' is NaN or null
@@ -178,6 +188,7 @@ def perform_vlookup():
 
             # Display a success message in a message box
             messagebox.showinfo("Success", "The output file has been saved as: " + output_file)
+            button_to_disable.config(state="disabled")
 
     except Exception as e:
         messagebox.showerror("Error Process was Cancelled", str(e))

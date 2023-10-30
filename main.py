@@ -21,6 +21,9 @@ def open_readme_link():
 
 class ExcelSorter:
     def __init__(self):
+        self.sort_last_ship_date_button = None
+        self.sort_backlog_button = None
+        self.sort_award_button = None
         self.window = tk.Tk()
         self.window.title("Sorting Creation Files And Performing VLookUp")
         self.window.configure(bg="white")
@@ -92,25 +95,32 @@ class ExcelSorter:
 
         run_queries_button = ttk.Button(frame, text="Run Queries", command=new_function, style="TButton")
         run_queries_button.pack(pady=10)
+        print("Run Queries Button Called")
 
-        sort_award_button = ttk.Button(frame, text="Sort Award File", command=self.sort_award_file,
-                                       style="TButton")
-        sort_award_button.pack(pady=10)
+        self.sort_award_button = ttk.Button(frame, text="Sort Award File", command=self.sort_award_file,
+                                            style="TButton")
+        self.sort_award_button.pack(pady=10)
+        print("Sort Awards Button Called")
 
-        sort_backlog_button = ttk.Button(frame, text="Sort Backlog File", command=self.sort_backlog_file,
-                                         style="TButton")
-        sort_backlog_button.pack(pady=10)
+        self.sort_backlog_button = ttk.Button(frame, text="Sort Backlog File", command=self.sort_backlog_file,
+                                              style="TButton")
+        self.sort_backlog_button.pack(pady=10)
+        print("Sort Backlog Button Called")
 
-        sort_last_ship_date_button = ttk.Button(frame, text="Sort Sales History File",
-                                                command=self.sort_by_last_ship_date, style="TButton")
-        sort_last_ship_date_button.pack(pady=10)
+        self.sort_last_ship_date_button = ttk.Button(frame, text="Sort Sales History File",
+                                                     command=self.sort_by_last_ship_date, style="TButton")
+        self.sort_last_ship_date_button.pack(pady=10)
+        print("Sort Sales History Button Called")
 
-        sort_ship_and_debit = ttk.Button(frame, text="Sort SND File", command=self.sort_ship_and_debit,
-                                         style="TButton")
-        sort_ship_and_debit.pack(pady=10)
+        self.sort_ship_and_debit = ttk.Button(frame, text="Sort SND File",
+                                              command=self.sort_ship_and_debit,
+                                              style="TButton")
+        self.sort_ship_and_debit.pack(pady=10)
+        print("Sort SND Button Called")
 
-        sort_vpc = ttk.Button(frame, text="Sort VPC File", command=self.sort_vpc, style="TButton")
-        sort_vpc.pack(pady=10)
+        self.sort_vpc = ttk.Button(frame, text="Sort VPC File", command=self.sort_vpc, style="TButton")
+        self.sort_vpc.pack(pady=10)
+        print("Sort VPC Button Called")
 
         add_instructions_for_active_contracts_file = ttk.Label(
             frame,
@@ -128,9 +138,13 @@ class ExcelSorter:
         )
         add_instructions_for_active_contracts_file.pack(pady=2)
 
-        merge_and_create_lost_items_button = ttk.Button(frame, text="Merge Files and Create 'Lost Items' Sheet",
-                                                        command=merge_files_and_create_lost_items, style="TButton")
+        merge_and_create_lost_items_button = ttk.Button(frame,
+                                                        text="Merge Files and Create 'Lost Items' Sheet",
+                                                        command=lambda: merge_files_and_create_lost_items(
+                                                            merge_and_create_lost_items_button),
+                                                        style="TButton")
         merge_and_create_lost_items_button.pack(pady=10)
+        print("Merge Button Called")
 
         new_instructions = ttk.Label(
             frame,
@@ -146,8 +160,9 @@ class ExcelSorter:
         new_instructions.pack(pady=10)
 
         perform_vlookup_button = ttk.Button(frame, text="Perform VLook-Up to new file",
-                                            command=perform_vlookup, style="TButton")
+                                            command=lambda: perform_vlookup(perform_vlookup_button), style="TButton")
         perform_vlookup_button.pack(pady=10)
+        print("Perform V-lookup Button Called")
 
         add_instructions_for_active_contracts_file = ttk.Label(
             frame,
@@ -164,8 +179,10 @@ class ExcelSorter:
         add_instructions_for_active_contracts_file.pack(pady=2)
 
         add_running_file_button = ttk.Button(frame, text="Add Latest Running File",
-                                             command=add_running_file_to_workbook, style="TButton")
+                                             command=lambda: add_running_file_to_workbook(add_running_file_button),
+                                             style="TButton")
         add_running_file_button.pack(pady=10)
+        print("Add Runnning File Button Called")
 
         description_label = ttk.Label(frame, text="Feel free to check out the ReadMe for more detailed instructions",
                                       font=("Rupee", 18),
@@ -208,30 +225,35 @@ class ExcelSorter:
         file_path = self.select_file("Awards")
         if file_path:
             self.sort_excel(file_path, ['Product ID', 'Award Cust ID'], [True, False], "Award")
+            self.sort_award_button.config(state=tk.DISABLED)
 
     def sort_backlog_file(self):
         print("Sort Backlog File called")
         file_path = self.select_file("Backlog")
         if file_path:
             self.sort_excel(file_path, ['Product ID', 'Backlog Entry'], [True, False], "Backlog")
+            self.sort_backlog_button.config(state=tk.DISABLED)
 
     def sort_by_last_ship_date(self):
         print("Sort Sales File called")
         file_path = self.select_file("Sales")
         if file_path:
             self.sort_excel(file_path, ['Product ID', 'Last Ship Date'], [True, False], "Sales History")
+            self.sort_last_ship_date_button.config(state=tk.DISABLED)
 
     def sort_ship_and_debit(self):
         print("Sort Ship and Debit called")
         file_path = self.select_file("SND")
         if file_path:
             self.sort_excel(file_path, ['Product ID', 'SND Cost'], [True, True], "Ship & Debit")
+            self.sort_ship_and_debit.config(state=tk.DISABLED)
 
     def sort_vpc(self):
         print("Sort VPC File called")
         file_path = self.select_file("VPC")
         if file_path:
             self.sort_excel(file_path, ['PART ID', 'VPC Cost'], [True, False], "VPC")
+            self.sort_vpc.config(state=tk.DISABLED)
 
     @staticmethod  # This is for some exceptions where we have certain numbers in our Excel file
     def sort_excel(file_path, sort_columns, ascending_order, file_type=""):

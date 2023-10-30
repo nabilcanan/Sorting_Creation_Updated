@@ -4,7 +4,7 @@ from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 
-def merge_files_and_create_lost_items():
+def merge_files_and_create_lost_items(button_to_disable):
     print("merge_files_and_create_lost_items called")
     file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC"]
     file_paths = []
@@ -52,5 +52,6 @@ def merge_files_and_create_lost_items():
                             "Files merged and 'Lost Items' sheet created "
                             "successfully with any missing IPN's from last week that "
                             "are not in the current weeks file.")
+        button_to_disable.config(state="disabled")
     except Exception as e:
         messagebox.showerror("Error", str(e))

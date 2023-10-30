@@ -137,7 +137,6 @@ def new_function():
         time.sleep(5)
         open_query_window.OK.click_input()
         print(f"OK clicked for '{query}'. Waiting for criteria panel...")
-        time.sleep(5)  # ORIGINALLY 5
 
         # Click on criteria panel
         click_button_image(image_path_criteria)
