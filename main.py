@@ -10,9 +10,19 @@ from vlookup import perform_vlookup
 from merge import merge_files_and_create_lost_items
 from add_running import add_running_file_to_workbook
 import webbrowser
+import os
 
 warnings.simplefilter('ignore', UserWarning)
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
+
+
+def open_powerpoint():
+    powerpoint_file = r'"P:\Partnership_Python_Projects\Creation\Creation_Python_Program.pptx"'
+
+    try:
+        os.startfile(powerpoint_file)
+    except Exception as e:
+        print(f"Error: {e}")
 
 
 def open_readme_link():
@@ -77,6 +87,10 @@ class ExcelSorter:
         title_label = ttk.Label(frame, text="Welcome Partnership Member!",
                                 font=("Rupee", 32, "underline"), background="white", foreground="#103d81")
         title_label.pack(pady=10)
+
+        open_powerpoint_button = ttk.Button(self.inner_frame, text='Open PowerPoint Instructions',
+                                            command=open_powerpoint)
+        open_powerpoint_button.pack(pady=10)
 
         description_label = ttk.Label(frame,
                                       text="This tool allows you to sort your Excel files for our Creation "
