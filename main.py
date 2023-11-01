@@ -11,6 +11,16 @@ from merge import merge_files_and_create_lost_items
 from add_running import add_running_file_to_workbook
 import webbrowser
 import os
+import pygame
+from threading import Thread
+
+
+def play_background_music():
+    pygame.mixer.init()
+    pygame.mixer.music.load('images-videos/restaurant-music-110483.mp3')
+    pygame.mixer.music.play(-1)  # Play the music, -1 means play indefinitely in loop
+    pass
+
 
 warnings.simplefilter('ignore', UserWarning)
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
@@ -75,6 +85,9 @@ class ExcelSorter:
 
         # Bind the function to the MouseWheel event, to make our scrolling function more applicable 
         self.canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        music_thread = Thread(target=play_background_music, daemon=True)
+        music_thread.start()
 
     def create_widgets(self, frame):
         style = ttk.Style()
