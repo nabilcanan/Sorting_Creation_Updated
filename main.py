@@ -84,7 +84,7 @@ class ExcelSorter:
                   background=[('active', 'blue')])
         style.configure("TButton", background="white")  # Change the button background color to white
 
-        title_label = ttk.Label(frame, text="Welcome Partnership Member!",
+        title_label = ttk.Label(frame, text="Welcome Partnership Team!",
                                 font=("Rupee", 32, "underline"), background="white", foreground="#103d81")
         title_label.pack(pady=10)
 

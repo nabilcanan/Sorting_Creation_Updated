@@ -1,8 +1,14 @@
 import time
+import datetime
 from tkinter import messagebox, Tk, simpledialog
 from pywinauto.application import Application
 import pyautogui
 import os
+
+
+def log_user_activity(username):
+    with open("user_activity_log.txt", "a") as log_file:  # 'a' mode ensures we're appending and not overwriting
+        log_file.write(f"{username} logged in at {datetime.datetime.now()}\n")
 
 
 def click_button_image(image_path, confidence=0.8, offset=0, double_click_required=False):
@@ -116,6 +122,8 @@ def new_function():
         if app.window(title="Network API").exists():
             messagebox.showerror("Error", "PeopleSoft login failed. Please check your credentials NOW!.")
             raise Exception("LoginFailed")  # Raise an exception when login fails
+        else:
+            log_user_activity(username)  # Log the user's activity when the login is successful
 
         # Go to Query menu
         app = Application().connect(title_re="Application Designer - .*")
