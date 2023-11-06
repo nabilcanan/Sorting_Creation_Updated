@@ -167,7 +167,7 @@ def new_function():
                 # Look for the image and click it
                 click_button_image(image_path_run_to_excel)
                 run_to_excel_clicked = True
-                time.sleep(20)  # Wait for 20 seconds after clicking
+                time.sleep(17)  # Wait for 20 seconds after clicking
 
         click_run_to_excel()
 
@@ -215,3 +215,4 @@ def new_function():
             print("Login failed. Stopping further queries.")
         else:
             print(f"Error: {str(e)}")
+            

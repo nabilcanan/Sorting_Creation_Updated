@@ -172,6 +172,7 @@ def perform_vlookup(button_to_disable):
                         pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"
 
                         # Format the cells
+                        sheet[price_x_cell].number_format = '$0.0000'
                         sheet[gp_cell].number_format = '0.00%'  # GP% as percent
                         sheet[cost_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
                         sheet[date_cell].number_format = 'MM/DD/YYYY'  # Date as MM/DD/YYYY
