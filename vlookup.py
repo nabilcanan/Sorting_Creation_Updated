@@ -4,6 +4,7 @@ import pandas as pd
 from openpyxl.styles import PatternFill, Alignment
 import numpy as np
 from openpyxl.utils import get_column_letter
+from colored_headers import headers_to_color
 
 
 def perform_vlookup(button_to_disable):
@@ -37,13 +38,19 @@ def perform_vlookup(button_to_disable):
             prev_contract_df[
                 ['IPN', 'LW PRICE', 'PSoft Part', "Prev Contract MPN", "MPN Match",
                  "Price Match MPN",
-                 "LAST WEEK Contract Change", "Contract Change", "count",
+                 "Contract Change", "count",
                  "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
                  "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
                  "Corp Awd Loaded", "90 DAY PI - NEW PRICE", "PI SENT DATE",
                  "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
                  "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
                  "Review Note", "LW Cost", "LW Quote#", "LW Cost Exp Date", "LW Review Note"]], on='IPN', how='left')
+
+        # Calculate the counts for each 'PSoft Part'
+        psoft_part_counts = active_supplier_df['PSoft Part'].value_counts()
+
+        # Update the 'count' column in active_supplier_df with the new counts
+        active_supplier_df['count'] = active_supplier_df['PSoft Part'].map(psoft_part_counts)
 
         # Iterate through each row in the active_supplier_df to look for a match in SND and VPC
         for idx, row in active_supplier_df.iterrows():
@@ -183,29 +190,6 @@ def perform_vlookup(button_to_disable):
                         # Apply formula to GP%
                         formula = f"=IF({price_x_cell}=0,0,({price_x_cell} - {cost_cell}) / {price_x_cell})"
                         sheet[gp_cell] = formula
-
-                headers_to_color = {
-                    'Price': "0000FFFF",
-                    'GP%': "0000FFFF",
-                    'Cost': "0000FFFF",
-                    'Cost Note': "0000FFFF",
-                    'Quote#': "0000FFFF",
-                    'Cost Exp Date': "0000FFFF",
-                    'Cost MOQ': "0000FFFF",
-                    'PSoft Part': "00FFFF00",
-                    'MPN': "0000FFFF",
-                    'MFG': "0000FFFF",
-                    'EAU': "0000FFFF",
-                    'MOQ': "0000FFFF",
-                    'MPQ': "0000FFFF",
-                    'NCNR': "0000FFFF",
-                    'LW PRICE': "0000FFFF",
-                    'LW Cost': "FFFF00",
-                    'LW Quote#': "FFFF00",
-                    'LW Cost Exp Date': "FFFF00",
-                    'LW Review Note': "FFFF00"
-
-                }
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
                     if col_cells[0].value in headers_to_color:

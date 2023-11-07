@@ -215,4 +215,3 @@ def new_function():
             print("Login failed. Stopping further queries.")
         else:
             print(f"Error: {str(e)}")
-            
