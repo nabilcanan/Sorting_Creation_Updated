@@ -239,14 +239,15 @@ class ExcelSorter:
         file_path = filedialog.askopenfilename(title=f"Select {file_type} file",
                                                filetypes=(
                                                    ("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")),
-                                               initialdir="P:\Partnership_Python_Projects\Creation\test_001")
+                                               initialdir="P:\Partnership_Python_Projects\Creation\python_creation_setup_demo")
 
         if file_path:
             return file_path
         else:
             return None
 
-    # Here is where we will sort all the files we ran our queries from
+    # Here is where we will sort all the files we ran our queries from, this uses boolean variables
+    # Sorting them ascending and descending is the key for organization
     def sort_award_file(self):
         print("Sort Award File called")
         file_path = self.select_file("Awards")
@@ -311,7 +312,7 @@ class ExcelSorter:
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    @staticmethod
+    @staticmethod # Write to data sheet for dataframes that are finished and merged
     def write_data_to_sheet(sheet, df):
         for r in dataframe_to_rows(df, index=False, header=True):
             sheet.append(r)

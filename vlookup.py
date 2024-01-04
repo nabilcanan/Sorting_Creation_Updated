@@ -55,6 +55,7 @@ def perform_vlookup(button_to_disable):
         # Iterate through each row in the active_supplier_df to look for a match in SND and VPC
         for idx, row in active_supplier_df.iterrows():
             psoft_part = row['PSoft Part']
+            ipn = row['IPN']
 
             # Check SND using the 'Product ID' column
             matching_snd = snd_df[snd_df['Product ID'] == psoft_part]
@@ -66,6 +67,14 @@ def perform_vlookup(button_to_disable):
             matching_vpc = vpc_df[vpc_df['PART ID'] == psoft_part]
             if not matching_vpc.empty and not pd.isna(matching_vpc.iloc[0, 1]):
                 active_supplier_df.at[idx, 'Cost'] = matching_vpc.iloc[0, 1]
+
+            # Get the column index for 'End Date'
+            end_date_col_index = awards_df.columns.get_loc('End Date')
+
+            # Check Awards using the 'Award CPN' column
+            matching_awards = awards_df[awards_df['Award CPN'] == ipn]
+            if not matching_awards.empty and not pd.isna(matching_awards.iloc[0, end_date_col_index]):
+                active_supplier_df.at[idx, 'PS Award Exp Date'] = matching_awards.iloc[0, end_date_col_index]
 
         print(active_supplier_df.columns)
 
@@ -168,7 +177,8 @@ def perform_vlookup(button_to_disable):
                             sheet[pi_sent_date_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
 
                 # Check if all the required columns were found and apply formatting
-                if all([price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, pi_sent_date_col]):
+                if all([price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col,
+                        pi_sent_date_col]):
                     for row in range(2, sheet.max_row + 1):  # Assuming row 1 is the header, so we start from row 2
                         gp_cell = f"{get_column_letter(gp_col)}{row}"
                         price_x_cell = f"{get_column_letter(price_x_col)}{row}"
@@ -179,7 +189,7 @@ def perform_vlookup(button_to_disable):
                         pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"
 
                         # Format the cells
-                        sheet[price_x_cell].number_format = '$0.0000'
+                        sheet[price_x_cell].number_format = '$0.0000'  # Formats the Price cells accordingly
                         sheet[gp_cell].number_format = '0.00%'  # GP% as percent
                         sheet[cost_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
                         sheet[date_cell].number_format = 'MM/DD/YYYY'  # Date as MM/DD/YYYY
