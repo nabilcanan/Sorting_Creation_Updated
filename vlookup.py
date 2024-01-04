@@ -71,7 +71,7 @@ def perform_vlookup(button_to_disable):
             # Get the column index for 'End Date'
             end_date_col_index = awards_df.columns.get_loc('End Date')
 
-            # Check Awards using the 'Award CPN' column
+            # Check Awards ex p date using the 'Award CPN' column from the awards_df we loaded
             matching_awards = awards_df[awards_df['Award CPN'] == ipn]
             if not matching_awards.empty and not pd.isna(matching_awards.iloc[0, end_date_col_index]):
                 active_supplier_df.at[idx, 'PS Award Exp Date'] = matching_awards.iloc[0, end_date_col_index]

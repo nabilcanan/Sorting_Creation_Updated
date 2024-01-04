@@ -240,7 +240,8 @@ class ExcelSorter:
                                                filetypes=(
                                                    ("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")),
                                                initialdir="P:\Partnership_Python_Projects\Creation\python_creation_setup_demo")
-
+        
+        # loads and saves the files accordingly
         if file_path:
             return file_path
         else:
