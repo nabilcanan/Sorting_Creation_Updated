@@ -76,6 +76,17 @@ def perform_vlookup(button_to_disable):
             if not matching_awards.empty and not pd.isna(matching_awards.iloc[0, end_date_col_index]):
                 active_supplier_df.at[idx, 'PS Award Exp Date'] = matching_awards.iloc[0, end_date_col_index]
 
+                # Check Awards for 'Award Price' and 'Award Cust ID' using the 'Award CPN' column from awards_df
+                matching_awards = awards_df[awards_df['Award CPN'] == ipn]
+                if not matching_awards.empty:
+                    # Update 'PS Award Price'
+                    if pd.notna(matching_awards['Award Price'].iloc[0]):
+                        active_supplier_df.at[idx, 'PS Award Price'] = matching_awards['Award Price'].iloc[0]
+
+                    # Update 'PS AWD CUST ID'
+                    if pd.notna(matching_awards['Award Cust ID'].iloc[0]):
+                        active_supplier_df.at[idx, 'PS AWD CUST ID'] = matching_awards['Award Cust ID'].iloc[0]
+
         print(active_supplier_df.columns)
 
         # The Contract Change comparison is done between 'Price' and 'LW PRICE'.
