@@ -71,7 +71,7 @@ def perform_vlookup(button_to_disable):
             # Get the column index for 'End Date'
             end_date_col_index = awards_df.columns.get_loc('End Date')
 
-            # Check Awards ex p date using the 'Award CPN' column from the awards_df we loaded
+            # Check Awards ex p date using the 'Award CPN' column from the awards_df we loaded then perform the action
             matching_awards = awards_df[awards_df['Award CPN'] == ipn]
             if not matching_awards.empty and not pd.isna(matching_awards.iloc[0, end_date_col_index]):
                 active_supplier_df.at[idx, 'PS Award Exp Date'] = matching_awards.iloc[0, end_date_col_index]
@@ -83,9 +83,9 @@ def perform_vlookup(button_to_disable):
                     if pd.notna(matching_awards['Award Price'].iloc[0]):
                         active_supplier_df.at[idx, 'PS Award Price'] = matching_awards['Award Price'].iloc[0]
 
-                    # Update 'PS AWD CUST ID'
+                    # Update 'PS AWD CUST ID' from awards_df
                     if pd.notna(matching_awards['Award Cust ID'].iloc[0]):
-                        active_supplier_df.at[idx, 'PS AWD CUST ID'] = matching_awards['Award Cust ID'].iloc[0]
+                        active_supplier_df.at[idx, 'PS Awd Cust ID'] = matching_awards['Award Cust ID'].iloc[0]
 
         print(active_supplier_df.columns)
 
