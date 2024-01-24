@@ -52,10 +52,15 @@ def perform_vlookup(button_to_disable):
         # Update the 'count' column in active_supplier_df with the new counts
         active_supplier_df['count'] = active_supplier_df['PSoft Part'].map(psoft_part_counts)
 
-        # Iterate through each row in the active_supplier_df to look for a match in SND and VPC
+        active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
+        active_supplier_df['PSoft Part'] = active_supplier_df['PSoft Part'].astype(str).str.strip()
+
+        # Strip white spaces from the headers of awards_df
+        awards_df.columns = awards_df.columns.str.strip()
+
         for idx, row in active_supplier_df.iterrows():
-            psoft_part = row['PSoft Part']
             ipn = row['IPN']
+            psoft_part = row['PSoft Part']
 
             # Check SND using the 'Product ID' column
             matching_snd = snd_df[snd_df['Product ID'] == psoft_part]
@@ -68,26 +73,28 @@ def perform_vlookup(button_to_disable):
             if not matching_vpc.empty and not pd.isna(matching_vpc.iloc[0, 1]):
                 active_supplier_df.at[idx, 'Cost'] = matching_vpc.iloc[0, 1]
 
-            # Get the column index for 'End Date'
-            end_date_col_index = awards_df.columns.get_loc('End Date')
+            # Find matching rows in 'Awards'
+            matching_indices = awards_df['Award CPN'] == ipn
+            if matching_indices.any():
+                # Convert 'End Date' to datetime and then to the desired string format
+                awards_df.loc[matching_indices, 'End Date'] = pd.to_datetime(
+                    awards_df.loc[matching_indices, 'End Date'],
+                    errors='coerce').dt.strftime('%m-%d-%Y')
+                valid_end_dates = awards_df.loc[matching_indices].dropna(subset=['End Date'])
 
-            # Check Awards ex p date using the 'Award CPN' column from the awards_df we loaded then perform the action
-            matching_awards = awards_df[awards_df['Award CPN'] == ipn]
-            if not matching_awards.empty and not pd.isna(matching_awards.iloc[0, end_date_col_index]):
-                active_supplier_df.at[idx, 'PS Award Exp Date'] = matching_awards.iloc[0, end_date_col_index]
+                if not valid_end_dates.empty:
+                    latest_end_date = valid_end_dates['End Date'].max()
+                    active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date  # Already in 'MM-DD-YYYY' format
 
-                # Check Awards for 'Award Price' and 'Award Cust ID' using the 'Award CPN' column from awards_df
-                matching_awards = awards_df[awards_df['Award CPN'] == ipn]
-                if not matching_awards.empty:
-                    # Update 'PS Award Price'
-                    if pd.notna(matching_awards['Award Price'].iloc[0]):
-                        active_supplier_df.at[idx, 'PS Award Price'] = matching_awards['Award Price'].iloc[0]
+                    # Update 'PS Award Price' and 'PS AWD CUST ID' if available
+                    if pd.notna(valid_end_dates['Award Price'].iloc[0]):
+                        active_supplier_df.at[idx, 'PS Award Price'] = valid_end_dates['Award Price'].iloc[0]
+                    if pd.notna(valid_end_dates['Award Cust ID'].iloc[0]):
+                        active_supplier_df.at[idx, 'PS Awd Cust ID'] = valid_end_dates['Award Cust ID'].iloc[0]
 
-                    # Update 'PS AWD CUST ID' from awards_df
-                    if pd.notna(matching_awards['Award Cust ID'].iloc[0]):
-                        active_supplier_df.at[idx, 'PS Awd Cust ID'] = matching_awards['Award Cust ID'].iloc[0]
-
-        print(active_supplier_df.columns)
+        # Convert the 'PS Award Exp Date' in active_supplier_df to 'MM-DD-YYYY' format
+        active_supplier_df['PS Award Exp Date'] = pd.to_datetime(active_supplier_df['PS Award Exp Date'],
+                                                                 errors='coerce').dt.strftime('%m-%d-%Y')
 
         # The Contract Change comparison is done between 'Price' and 'LW PRICE'.
         # tolerance = 0.01  # you can set it to any value you deem fit
