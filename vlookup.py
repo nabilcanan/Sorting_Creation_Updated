@@ -38,6 +38,16 @@ def perform_vlookup(button_to_disable):
         # Rename the 'Price' column from 'Prev Contract' dataframe to 'LW PRICE'
         prev_contract_df.rename(columns={'Price': 'LW PRICE'}, inplace=True)
 
+        # We will add this in after we discuss in our meeting, basically we are going into the prev contract
+        # and bringing in the Cost column and brining it into the LW Cost column the yellow one at the end of
+        # the active dataframe
+        # # ------------------ MERGE 'LW COST' FROM PREV CONTRACT TO ACTIVE SUPPLIER DF ------------------
+        # if 'Cost' in prev_contract_df.columns:
+        #     prev_contract_df.rename(columns={'Cost': 'LW Cost'}, inplace=True)
+        #     lw_cost_mapping = prev_contract_df.set_index('IPN')['LW Cost'].to_dict()
+        #     active_supplier_df['LW Cost'] = active_supplier_df['IPN'].map(lw_cost_mapping)
+        # # ------------------ Enb of MERGE 'LW COST' FROM PREV CONTRACT TO ACTIVE SUPPLIER DF ------------
+
         # merge
         active_supplier_df = active_supplier_df.merge(
             prev_contract_df[
@@ -58,6 +68,7 @@ def perform_vlookup(button_to_disable):
         active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
         active_supplier_df['PSoft Part'] = active_supplier_df['PSoft Part'].astype(str).str.strip()
         awards_df.columns = awards_df.columns.str.strip()
+
 
         for idx, row in active_supplier_df.iterrows():
             ipn = row['IPN']
@@ -102,6 +113,17 @@ def perform_vlookup(button_to_disable):
             if not matching_vpc.empty and not pd.isna(matching_vpc.iloc[0, 1]):
                 active_supplier_df.at[idx, 'Cost'] = matching_vpc.iloc[0, 1]
             # -----------------------------------------------------------------------------
+
+            # ------------------ UPDATE 'CORP AWARD LOADED' STATUS ------------------
+            # Normalize 'Award CPN' values from awards_df for a more accurate lookup (trim spaces, ensure consistent case)
+            normalized_award_cpn_set = set(awards_df['Award CPN'].str.strip().str.lower())
+
+            # Update 'Corp Award Loaded' based on the presence of a normalized 'IPN' in the normalized award CPN set
+            # Use a different variable name inside the lambda to avoid shadowing
+            active_supplier_df['Corp Awd Loaded'] = active_supplier_df['IPN'].str.strip().str.lower().apply(
+                lambda x: 'Y' if x in normalized_award_cpn_set else 'N'
+            )
+            # ------------------ End of Corp Award loaded status --------------------
 
             # ------------------ UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME ------------------
             # Find matching rows in 'Awards'
