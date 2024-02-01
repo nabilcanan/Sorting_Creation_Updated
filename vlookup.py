@@ -1,21 +1,24 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from tkinter import filedialog, messagebox
 import pandas as pd
 from openpyxl.styles import PatternFill, Alignment
 import numpy as np
 from openpyxl.utils import get_column_letter
 from colored_headers import headers_to_color
+import psutil
 
 
 def perform_vlookup(button_to_disable):
     try:
+        # ------------------ SELECT CONTRACT FILE -------------------------------
         # Ask the user for the contract file
         contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup",
                                                    initialdir="P:\Partnership_Python_Projects\Creation\test_001")
 
+        # ------------------ LOAD DATAFRAMES ------------------------------------
         # Load 'Active Supplier Contracts' and 'Prev Contract' sheets
         active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
-        prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0)
+        prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0, dtype={'PSoft Part': str})
         lost_items_df = pd.read_excel(contract_file, sheet_name='Lost Items')
         awards_df = pd.read_excel(contract_file, sheet_name='Awards')
         snd_df = pd.read_excel(contract_file, sheet_name='SND')
@@ -25,7 +28,9 @@ def perform_vlookup(button_to_disable):
 
         print("Loaded 'Active Supplier Contracts' sheet with shape:", active_supplier_df.shape)
         print("Loaded 'Prev Contract' sheet with shape:", prev_contract_df.shape)
+        # ---------------- End of Loading Sheets ---------------------------------
 
+        # ------------------ PRELIMINARY DATA PREPARATION ----------------------------
         # Drop the 'LW PRICE' column if it exists in the 'Prev Contract' dataframe
         if 'LW PRICE' in prev_contract_df.columns:
             prev_contract_df.drop('LW PRICE', axis=1, inplace=True)
@@ -48,35 +53,62 @@ def perform_vlookup(button_to_disable):
 
         # Calculate the counts for each 'PSoft Part'
         psoft_part_counts = active_supplier_df['PSoft Part'].value_counts()
-
-        # Update the 'count' column in active_supplier_df with the new counts
         active_supplier_df['count'] = active_supplier_df['PSoft Part'].map(psoft_part_counts)
 
         active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
         active_supplier_df['PSoft Part'] = active_supplier_df['PSoft Part'].astype(str).str.strip()
-
-        # Strip white spaces from the headers of awards_df
         awards_df.columns = awards_df.columns.str.strip()
 
         for idx, row in active_supplier_df.iterrows():
             ipn = row['IPN']
             psoft_part = row['PSoft Part']
 
+            # ------------------ BACKLOG VALUE MAPPING TO LOST ITEMS ------------------
+            # Create a mapping from 'Backlog CPN' to 'Backlog Value' in backlog_df
+            backlog_value_mapping = backlog_df.set_index('Backlog CPN')['Backlog Value'].to_dict()
+            # Apply the mapping to 'IPN' column in lost_items_df to get 'Backlog Value'
+            lost_items_df['Backlog Value'] = lost_items_df['IPN'].map(backlog_value_mapping)
+            # ---------------------------------------------------------------------------
+
+            # ------------------- Snippet for sales history 12 MONTH CPN SALE----------------------
+            # Example column name: 'YourDateColumnName'
+            date_column = 'Last Ship Date'  # Replace with your actual date column name
+            # Convert the date column to datetime format
+            sales_history_df[date_column] = pd.to_datetime(sales_history_df[date_column], errors='coerce')
+            # Calculate the date for 12 months ago
+            one_year_ago = datetime.now() - timedelta(days=365)
+            # Filter sales_history_df to include only the last 12 months
+            sales_history_df_filtered = sales_history_df[sales_history_df[date_column] >= one_year_ago]
+            # Continue with your grouping and summing logic as before
+            sales_history_grouped = sales_history_df_filtered.groupby('Last Ship CPN')['Net'].sum().reset_index()
+            # Map these summed 'NET' values to '12 Month CPN Sales' in active_supplier_df
+            # Convert the grouped data into a dictionary for easy mapping
+            sales_net_mapping = sales_history_grouped.set_index('Last Ship CPN')['Net'].to_dict()
+            # Map the summed 'NET' values to 'active_supplier_df' based on 'IPN'
+            active_supplier_df['12 Month CPN Sales'] = active_supplier_df['IPN'].map(sales_net_mapping)
+            # -----------------------------------------------------------------------------------
+
+            # ------------ SND Cost updates Logic -----------------------------------------
             # Check SND using the 'Product ID' column
             matching_snd = snd_df[snd_df['Product ID'] == psoft_part]
             if not matching_snd.empty and not pd.isna(matching_snd.iloc[0, 1]):
                 active_supplier_df.at[idx, 'Cost'] = matching_snd.iloc[0, 1]
                 continue  # If found in SND, skip checking VPC for the same PSoft Part
+            # -----------------------------------------------------------------------------
 
+            # ------------ VPC Cost updates Logic -----------------------------------------
             # Check VPC using the 'PART ID' column
             matching_vpc = vpc_df[vpc_df['PART ID'] == psoft_part]
             if not matching_vpc.empty and not pd.isna(matching_vpc.iloc[0, 1]):
                 active_supplier_df.at[idx, 'Cost'] = matching_vpc.iloc[0, 1]
+            # -----------------------------------------------------------------------------
 
+            # ------------------ UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME ------------------
             # Find matching rows in 'Awards'
             matching_indices = awards_df['Award CPN'] == ipn
             if matching_indices.any():
                 # Convert 'End Date' to datetime and then to the desired string format
+                # Bringing in the appropriate data from the awards_df
                 awards_df.loc[matching_indices, 'End Date'] = pd.to_datetime(
                     awards_df.loc[matching_indices, 'End Date'],
                     errors='coerce').dt.strftime('%m-%d-%Y')
@@ -95,13 +127,9 @@ def perform_vlookup(button_to_disable):
         # Convert the 'PS Award Exp Date' in active_supplier_df to 'MM-DD-YYYY' format
         active_supplier_df['PS Award Exp Date'] = pd.to_datetime(active_supplier_df['PS Award Exp Date'],
                                                                  errors='coerce').dt.strftime('%m-%d-%Y')
+        # --------------------- End of: UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME-----------
 
-        # The Contract Change comparison is done between 'Price' and 'LW PRICE'.
-        # tolerance = 0.01  # you can set it to any value you deem fit
-
-        print("Shape of active_supplier_df['Price']:", active_supplier_df['Price'].shape)
-        print("Shape of active_supplier_df['LW PRICE']:", active_supplier_df['LW PRICE'].shape)
-
+        # ---------------------- Contract Change Logic -----------------------------------------------
         active_supplier_df['Contract Change'] = np.where(
             active_supplier_df['LW PRICE'].isna(),  # Check if 'LW PRICE' is NaN or null
             'New Item',
@@ -115,11 +143,15 @@ def perform_vlookup(button_to_disable):
                 )
             )
         )
+        # --------------------- End of Contract Change Logic --------------------------------------------
 
+        # --------------------- Save Output File Logic --------------------------------------------------
         # Ask the user for the output file path
         output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as",
                                                    initialdir="P:\Partnership_Python_Projects\Creation\test_001")
+        # --------------------- End of Save Output File Logic -------------------------------------------
 
+        # --------------------- Saving the desired sheets in final output ------------------------------
         # Write all the DataFrames to the new Excel file in the specified order
         if output_file:
             with (pd.ExcelWriter(output_file, engine='openpyxl') as writer):
@@ -135,20 +167,18 @@ def perform_vlookup(button_to_disable):
                 # Grabbing the workbook and the desired sheet
                 workbook = writer.book
                 sheet = workbook['Active Supplier Contracts']
-
                 # Freeze the top row
                 sheet.freeze_panes = 'A2'
-
                 # Freeze the column H2
                 sheet.freeze_panes = "H2"
-
                 # Turn on filters for the top row only
                 sheet.auto_filter.ref = sheet.dimensions
-
                 # Wrap text for the first row, makes it look neater
                 for cell in sheet["1:1"]:
                     cell.alignment = Alignment(wrap_text=True)
+                # --------------------- End of Saving the desired sheets in final output -----------------
 
+                # --------------------- Additional formatting for specific columns -----------------------------
                 # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'
                 price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, pi_sent_date_col = None, None, None, None, None, None, None
 
@@ -229,5 +259,10 @@ def perform_vlookup(button_to_disable):
             messagebox.showinfo("Success", "The output file has been saved as: " + output_file)
             button_to_disable.config(state="disabled")
 
+            process = psutil.Process()
+            print(f"Memory usage: {process.memory_info().rss / 1024 ** 2:.2f} MB")  # memory usage in MB
+
     except Exception as e:
         messagebox.showerror("Error Process was Cancelled", str(e))
+        process = psutil.Process()
+        print(f"Memory usage at error: {process.memory_info().rss / 1024 ** 2:.2f} MB")
