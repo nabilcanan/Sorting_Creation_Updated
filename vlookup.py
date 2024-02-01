@@ -303,3 +303,5 @@ def perform_vlookup(button_to_disable):
         messagebox.showerror("Error Process was Cancelled", str(e))
         process = psutil.Process()
         print(f"Memory usage at error: {process.memory_info().rss / 1024 ** 2:.2f} MB")
+        # Exception is to cause the button to clear ability to re-click once complete
+        # Adjusting the rate of how the file is being used and how much memory we are using
