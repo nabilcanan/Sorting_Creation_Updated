@@ -69,7 +69,6 @@ def perform_vlookup(button_to_disable):
         active_supplier_df['PSoft Part'] = active_supplier_df['PSoft Part'].astype(str).str.strip()
         awards_df.columns = awards_df.columns.str.strip()
 
-
         for idx, row in active_supplier_df.iterrows():
             ipn = row['IPN']
             psoft_part = row['PSoft Part']
@@ -124,6 +123,22 @@ def perform_vlookup(button_to_disable):
                 lambda x: 'Y' if x in normalized_award_cpn_set else 'N'
             )
             # ------------------ End of Corp Award loaded status --------------------
+
+            # ------------------ PRICE MATCH CHECK BETWEEN ACTIVE SUPPLIER AND AWARDS DATAFRAME ------------------
+            # Convert prices to a consistent type (e.g., float) and round to a certain decimal precision if needed
+            active_supplier_df['PS Award Price'] = active_supplier_df['PS Award Price'].apply(pd.to_numeric,
+                                                                                              errors='coerce')
+            awards_df['Award Price'] = awards_df['Award Price'].apply(pd.to_numeric, errors='coerce')
+
+            # Create a dictionary for 'Award CPN' and their 'Award Price' from awards_df
+            award_price_mapping = awards_df.set_index('Award CPN')['Award Price'].to_dict()
+
+            # Perform the comparison and update 'Price Match Award'
+            active_supplier_df['Price Match Award'] = active_supplier_df.apply(
+                lambda x: 'Y' if np.isclose(award_price_mapping.get(x['IPN'], np.nan), x['PS Award Price'],
+                                            atol=1e-5) else 'N', axis=1
+            )
+            # ------------------ end of Price match between CPN and awards dataframe -----------------------------
 
             # ------------------ UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME ------------------
             # Find matching rows in 'Awards'
