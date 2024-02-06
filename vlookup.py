@@ -48,7 +48,7 @@ def perform_vlookup(button_to_disable):
         #     active_supplier_df['LW Cost'] = active_supplier_df['IPN'].map(lw_cost_mapping)
         # # ------------------ Enb of MERGE 'LW COST' FROM PREV CONTRACT TO ACTIVE SUPPLIER DF ------------
 
-        # merge
+        # ---------------- Adding the merge algorithm to bring in columns from prev contract dataframe --------------
         active_supplier_df = active_supplier_df.merge(
             prev_contract_df[
                 ['IPN', 'LW PRICE', 'PSoft Part', "Prev Contract MPN", "MPN Match",
@@ -60,15 +60,18 @@ def perform_vlookup(button_to_disable):
                  "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
                  "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
                  "Review Note", "LW Cost", "LW Quote#", "LW Cost Exp Date", "LW Review Note"]], on='IPN', how='left')
+        # ---------------- End of Adding the merge algorithm to bring in columns from prev contract dataframe -------
 
-        # Calculate the counts for each 'PSoft Part'
+        #  ------Calculate the counts for each 'PSoft Part' and display them with the value number we have ----------
         psoft_part_counts = active_supplier_df['PSoft Part'].value_counts()
         active_supplier_df['count'] = active_supplier_df['PSoft Part'].map(psoft_part_counts)
 
         active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
         active_supplier_df['PSoft Part'] = active_supplier_df['PSoft Part'].astype(str).str.strip()
         awards_df.columns = awards_df.columns.str.strip()
+        #  ------ End of Calculate the counts for each 'PSoft Part' and display them with the value number we have --
 
+        # ------- This for loop is used for the next coming if statements and adjusting from other df ---------------
         for idx, row in active_supplier_df.iterrows():
             ipn = row['IPN']
             psoft_part = row['PSoft Part']
@@ -78,9 +81,12 @@ def perform_vlookup(button_to_disable):
             backlog_value_mapping = backlog_df.set_index('Backlog CPN')['Backlog Value'].to_dict()
             # Apply the mapping to 'IPN' column in lost_items_df to get 'Backlog Value'
             lost_items_df['Backlog Value'] = lost_items_df['IPN'].map(backlog_value_mapping)
+            # Format the 'Backlog Value' column as currency with 2 decimal places
+            lost_items_df['Backlog Value'] = lost_items_df['Backlog Value'].apply(
+                lambda x: "" if pd.isnull(x) or x == 0 else "${:,.2f}".format(x))
             # ---------------------------------------------------------------------------
 
-            # ------------------- Snippet for sales history 12 MONTH CPN SALE----------------------
+            # ------------------- 12 Month CPN Sales Column Logic ----------------------
             # Example column name: 'YourDateColumnName'
             date_column = 'Last Ship Date'  # Replace with your actual date column name
             # Convert the date column to datetime format
@@ -141,25 +147,45 @@ def perform_vlookup(button_to_disable):
             # ------------------ end of Price match between CPN and awards dataframe -----------------------------
 
             # ------------------ UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME ------------------
-            # Find matching rows in 'Awards'
+
+            # Find matching rows in 'Awards' where 'Award CPN' matches the 'ipn' (Item Part Number)
             matching_indices = awards_df['Award CPN'] == ipn
+
+            # Check if there are any matching indices
             if matching_indices.any():
-                # Convert 'End Date' to datetime and then to the desired string format
-                # Bringing in the appropriate data from the awards_df
+
+                # Convert 'End Date' to datetime and then to the desired string format in 'awards_df'
+                # We are modifying 'awards_df' in place
                 awards_df.loc[matching_indices, 'End Date'] = pd.to_datetime(
                     awards_df.loc[matching_indices, 'End Date'],
                     errors='coerce').dt.strftime('%m-%d-%Y')
+
+                # Drop rows where 'End Date' conversion resulted in NaT (not a time) to ensure we have valid end dates
                 valid_end_dates = awards_df.loc[matching_indices].dropna(subset=['End Date'])
 
+                # Check if there are any rows with valid end dates
                 if not valid_end_dates.empty:
-                    latest_end_date = valid_end_dates['End Date'].max()
-                    active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date  # Already in 'MM-DD-YYYY' format
 
-                    # Update 'PS Award Price' and 'PS AWD CUST ID' if available
+                    # Find the latest 'End Date' among the valid ones
+                    latest_end_date = valid_end_dates['End Date'].max()
+
+                    # Update 'PS Award Exp Date' in 'active_supplier_df' with the latest 'End Date'
+                    # We are bringing in 'End Date' from 'awards_df' to 'active_supplier_df'
+                    active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date
+
+                    # Update 'PS Award Price' in 'active_supplier_df' if available
+                    # We are bringing in 'Award Price' from 'awards_df' to 'active_supplier_df'
+                    # This assumes the 'Award Price' is associated with the latest 'End Date'
                     if pd.notna(valid_end_dates['Award Price'].iloc[0]):
                         active_supplier_df.at[idx, 'PS Award Price'] = valid_end_dates['Award Price'].iloc[0]
+
+                    # Update 'PS Awd Cust ID' in 'active_supplier_df' if available
+                    # We are bringing in 'Award Cust ID' from 'awards_df' to 'active_supplier_df'
+                    # This assumes the 'Award Cust ID' is associated with the latest 'End Date'
                     if pd.notna(valid_end_dates['Award Cust ID'].iloc[0]):
                         active_supplier_df.at[idx, 'PS Awd Cust ID'] = valid_end_dates['Award Cust ID'].iloc[0]
+
+            # ----------------------- End of Update Awards Detail in active dataframe -----------------------
 
         # Convert the 'PS Award Exp Date' in active_supplier_df to 'MM-DD-YYYY' format
         active_supplier_df['PS Award Exp Date'] = pd.to_datetime(active_supplier_df['PS Award Exp Date'],
@@ -169,8 +195,8 @@ def perform_vlookup(button_to_disable):
         # ---------------------- Contract Change Logic -----------------------------------------------
         active_supplier_df['Contract Change'] = np.where(
             active_supplier_df['LW PRICE'].isna(),  # Check if 'LW PRICE' is NaN or null
-            'New Item',
-            np.where(
+            'New Item',  # New Item is going to be populated if the item was not in the prev contract
+            np.where(  # Locate where they are going to include the other contingencies
                 active_supplier_df['Price'] == active_supplier_df['LW PRICE'],
                 'No Change',
                 np.where(
