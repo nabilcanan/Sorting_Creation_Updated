@@ -73,7 +73,7 @@ def perform_vlookup(button_to_disable):
 
         # ------- This for loop is used for the next coming if statements and adjusting from other df ---------------
         for idx, row in active_supplier_df.iterrows():
-            ipn = row['IPN']
+            ipn = row['IPN']  # we use the IPN value to go back and forth between the awards dataframe
             psoft_part = row['PSoft Part']
 
             # ------------------ BACKLOG VALUE MAPPING TO LOST ITEMS ------------------
