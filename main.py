@@ -8,7 +8,7 @@ import warnings
 from queries import new_function
 from vlookup import perform_vlookup
 from merge import merge_files_and_create_lost_items
-from add_running import add_running_file_to_workbook
+# from add_running import add_running_file_to_workbook
 import webbrowser
 import os
 import pygame
@@ -191,34 +191,34 @@ class ExcelSorter:
         perform_vlookup_button.pack(pady=10)
         print("Perform V-lookup Button Called")
 
-        add_instructions_for_active_contracts_file = ttk.Label(
-            frame,
-            text="For the 'Add Latest Running File' button\n"
-                 "Select the Files in This order:\n"
-                 "1. The file where we are adding the Running File.\n"
-                 "2. The latest version of the Running file.",
-            font=("Rupee", 19),
-            background="white",
-            anchor="center",
-            justify="center",
-            wraplength=1000
-        )
-        add_instructions_for_active_contracts_file.pack(pady=2)
+        # add_instructions_for_active_contracts_file = ttk.Label(
+        #     frame,
+        #     text="For the 'Add Latest Running File' button\n"
+        #          "Select the Files in This order:\n"
+        #          "1. The file where we are adding the Running File.\n"
+        #          "2. The latest version of the Running file.",
+        #     font=("Rupee", 19),
+        #     background="white",
+        #     anchor="center",
+        #     justify="center",
+        #     wraplength=1000
+        # )
+        # add_instructions_for_active_contracts_file.pack(pady=2)
 
-        add_running_file_button = ttk.Button(frame, text="Add Latest Running File",
-                                             command=lambda: add_running_file_to_workbook(add_running_file_button),
-                                             style="TButton")
-        add_running_file_button.pack(pady=10)
-        print("Add Runnning File Button Called")
-
-        description_label = ttk.Label(frame, text="Feel free to check out the ReadMe for more detailed instructions",
-                                      font=("Rupee", 18),
-                                      background="white")
-        description_label.pack(anchor='center')
-
-        readme_button = ttk.Button(frame, text="Open ReadMe",
-                                   command=open_readme_link, style="TButton")
-        readme_button.pack(pady=10)
+        # add_running_file_button = ttk.Button(frame, text="Add Latest Running File",
+        #                                      command=lambda: add_running_file_to_workbook(add_running_file_button),
+        #                                      style="TButton")
+        # add_running_file_button.pack(pady=10)
+        # print("Add Runnning File Button Called")
+        #
+        # description_label = ttk.Label(frame, text="Feel free to check out the ReadMe for more detailed instructions",
+        #                               font=("Rupee", 18),
+        #                               background="white")
+        # description_label.pack(anchor='center')
+        #
+        # readme_button = ttk.Button(frame, text="Open ReadMe",
+        #                            command=open_readme_link, style="TButton")
+        # readme_button.pack(pady=10)
 
         logo_label = ttk.Label(frame, background="white")
         logo_label.pack(pady=10)

@@ -25,6 +25,7 @@ def perform_vlookup(button_to_disable):
         vpc_df = pd.read_excel(contract_file, sheet_name='VPC')
         backlog_df = pd.read_excel(contract_file, sheet_name='Backlog')
         sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History')
+        running_file_df = pd.read_excel(contract_file, sheet_name='Running File - 30 Day Notice Co')
 
         print("Loaded 'Active Supplier Contracts' sheet with shape:", active_supplier_df.shape)
         print("Loaded 'Prev Contract' sheet with shape:", prev_contract_df.shape)
@@ -75,6 +76,33 @@ def perform_vlookup(button_to_disable):
         for idx, row in active_supplier_df.iterrows():
             ipn = row['IPN']  # we use the IPN value to go back and forth between the awards dataframe
             psoft_part = row['PSoft Part']
+
+            # ------------------ Running File logic to check IPN and bring in Unit Price New ------------------
+            # This logic checks the IPN in the active dataframe and the creation part number in the running file and
+            # brings in the Unit Price New in our 90-Day Pi Sent day column in our active workbook, it does this also
+            # for all the data from the running file that we need in the active workbook, therefor it does this for
+            # "90 DAY PI - NEW PRICE", "PI SENT DATE","PI EFF DATE",
+            # Search for a matching IPN value in the running_file_df
+            matching_running_file = running_file_df[running_file_df['Creation Part Number'] == ipn]
+            # Check if a match is found and the corresponding value in the desired column (column L) is not NaN
+            if not matching_running_file.empty and not pd.isna(
+                    matching_running_file.iloc[0, 11]):  # Assuming column L is the 12th column (index 11)
+                # Update the "90 DAY PI - NEW PRICE" column in active_supplier_df with the extracted value
+                active_supplier_df.at[idx, '90 DAY PI - NEW PRICE'] = matching_running_file.iloc[
+                    0, 11]  # Assuming column L is the 12th column (index 11)
+
+            matching_running_file = running_file_df[running_file_df['Creation Part Number'] == ipn]
+            if not matching_running_file.empty and not pd.isna(
+                    matching_running_file.iloc[0, 21]):  # Assuming column V is in the 22nd column index 21
+                active_supplier_df.at[idx, 'PI SENT DATE'] = matching_running_file.iloc[
+                    0, 21]  # Assuming column V is in the 22nd column index 21
+
+            matching_running_file = running_file_df[running_file_df['Creation Part Number'] == ipn]
+            if not matching_running_file.empty and not pd.isna(
+                    matching_running_file.iloc[0, 4]):  # Assuming column E is in the 4 column index 4
+                active_supplier_df.at[idx, 'PI EFF DATE'] = matching_running_file.iloc[
+                    0, 4]  # Assuming column V is in the 22nd column index 21
+            # ------------------ End of Running File logic to check IPN and bring in Unit Price New ---------------
 
             # ------------------ BACKLOG VALUE MAPPING TO LOST ITEMS ------------------
             # Create a mapping from 'Backlog CPN' to 'Backlog Value' in backlog_df
@@ -226,6 +254,15 @@ def perform_vlookup(button_to_disable):
                 vpc_df.to_excel(writer, index=False, sheet_name='VPC')
                 backlog_df.to_excel(writer, index=False, sheet_name='Backlog')
                 sales_history_df.to_excel(writer, index=False, sheet_name='Sales History')
+                running_file_df.to_excel(writer, index=False, sheet_name='Running File - 30 Day Notice Co')
+
+                # Iterate over each sheet in the workbook to freeze top row, wrap text, and turn on filters
+                for sheet_name in writer.sheets:
+                    sheet = writer.sheets[sheet_name]
+                    sheet.freeze_panes = 'A2'  # Freeze the top row
+                    sheet.auto_filter.ref = sheet.dimensions  # Turn on filters for the top row only
+                    for cell in sheet["1:1"]:
+                        cell.alignment = Alignment(wrap_text=True)  # Wrap text for headers
 
                 # Grabbing the workbook and the desired sheet
                 workbook = writer.book
@@ -243,7 +280,7 @@ def perform_vlookup(button_to_disable):
 
                 # --------------------- Additional formatting for specific columns -----------------------------
                 # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'
-                price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, pi_sent_date_col = None, None, None, None, None, None, None
+                price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, pi_sent_date_col, pi_eff_date_col = None, None, None, None, None, None, None, None
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
                     col_val = col_cells[0].value  # header value in current column
@@ -261,6 +298,8 @@ def perform_vlookup(button_to_disable):
                         last_update_date_col = col_num
                     elif col_val == 'PI SENT DATE':
                         pi_sent_date_col = col_num
+                    elif col_val == 'PI EFF DATE':
+                        pi_eff_date_col = col_num
 
                     # Formatting for the "PI SENT DATE" column
                     if pi_sent_date_col:
@@ -289,7 +328,7 @@ def perform_vlookup(button_to_disable):
 
                 # Check if all the required columns were found and apply formatting
                 if all([price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col,
-                        pi_sent_date_col]):
+                        pi_sent_date_col, pi_eff_date_col]):
                     for row in range(2, sheet.max_row + 1):  # Assuming row 1 is the header, so we start from row 2
                         gp_cell = f"{get_column_letter(gp_col)}{row}"
                         price_x_cell = f"{get_column_letter(price_x_col)}{row}"
@@ -298,6 +337,7 @@ def perform_vlookup(button_to_disable):
                         award_date_cell = f"{get_column_letter(award_date_col)}{row}"
                         last_update_date_cell = f"{get_column_letter(last_update_date_col)}{row}"
                         pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"
+                        pi_eff_date_cell = f"{get_column_letter(pi_eff_date_col)}{row}"
 
                         # Format the cells
                         sheet[price_x_cell].number_format = '$0.0000'  # Formats the Price cells accordingly
@@ -307,6 +347,7 @@ def perform_vlookup(button_to_disable):
                         sheet[award_date_cell].number_format = 'MM/DD/YYYY'  # Award Date as MM/DD/YYYY
                         sheet[last_update_date_cell].number_format = 'MM/DD/YYYY'  # Last Update Date as MM/DD/YYYY
                         sheet[pi_sent_date_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
+                        sheet[pi_eff_date_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
 
                         # Apply formula to GP%
                         formula = f"=IF({price_x_cell}=0,0,({price_x_cell} - {cost_cell}) / {price_x_cell})"

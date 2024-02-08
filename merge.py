@@ -6,7 +6,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 def merge_files_and_create_lost_items(button_to_disable):
     print("merge_files_and_create_lost_items called")
-    file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC"]
+    file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC", 'Running File - 30 Day Notice Contract Price Increase_Sager -  COSTED']
     file_paths = []
 
     for file_name in file_names:
