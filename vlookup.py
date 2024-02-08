@@ -25,7 +25,7 @@ def perform_vlookup(button_to_disable):
         vpc_df = pd.read_excel(contract_file, sheet_name='VPC')
         backlog_df = pd.read_excel(contract_file, sheet_name='Backlog')
         sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History')
-        running_file_df = pd.read_excel(contract_file, sheet_name='Running File - 30 Day Notice Co')
+        running_file_df = pd.read_excel(contract_file, sheet_name='Price Increases')
 
         print("Loaded 'Active Supplier Contracts' sheet with shape:", active_supplier_df.shape)
         print("Loaded 'Prev Contract' sheet with shape:", prev_contract_df.shape)
@@ -254,7 +254,7 @@ def perform_vlookup(button_to_disable):
                 vpc_df.to_excel(writer, index=False, sheet_name='VPC')
                 backlog_df.to_excel(writer, index=False, sheet_name='Backlog')
                 sales_history_df.to_excel(writer, index=False, sheet_name='Sales History')
-                running_file_df.to_excel(writer, index=False, sheet_name='Running File - 30 Day Notice Co')
+                running_file_df.to_excel(writer, index=False, sheet_name='Price Increases')
 
                 # Iterate over each sheet in the workbook to freeze top row, wrap text, and turn on filters
                 for sheet_name in writer.sheets:
@@ -280,7 +280,10 @@ def perform_vlookup(button_to_disable):
 
                 # --------------------- Additional formatting for specific columns -----------------------------
                 # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'
-                price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, pi_sent_date_col, pi_eff_date_col = None, None, None, None, None, None, None, None
+                price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, \
+                    pi_sent_date_col, pi_eff_date_col, twelve_month_col, nine_day_pi_col, \
+                    ps_award_price_col, lw_price_col, lw_cost_col, ps_award_exp_col = \
+                    None, None, None, None, None, None, None, None, None, None, None, None, None, None
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
                     col_val = col_cells[0].value  # header value in current column
@@ -300,46 +303,41 @@ def perform_vlookup(button_to_disable):
                         pi_sent_date_col = col_num
                     elif col_val == 'PI EFF DATE':
                         pi_eff_date_col = col_num
+                    elif col_val == '12 Month CPN Sales':
+                        twelve_month_col = col_num
+                    elif col_val == '90 DAY PI - NEW PRICE':
+                        nine_day_pi_col = col_num
+                    elif col_val == 'PS Award Price':
+                        ps_award_price_col = col_num
+                    elif col_val == 'LW PRICE':
+                        lw_price_col = col_num
+                    elif col_val == 'LW Cost':
+                        lw_cost_col = col_num
+                    elif col_val == 'PS Award Exp Date':
+                        ps_award_exp_col = col_num
 
-                    # Formatting for the "PI SENT DATE" column
-                    if pi_sent_date_col:
-                        for row in range(2, sheet.max_row + 1):
-                            pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"
-
-                            cell_value = sheet[pi_sent_date_cell].value
-
-                            # If cell value is '-2' or is an out-of-range date
-                            if cell_value == "-2" or str(cell_value) == "####" or cell_value is None:
-                                sheet[pi_sent_date_cell].value = ""
-                            else:
-                                try:
-                                    # Check if the value can be interpreted as a date
-                                    parsed_date = datetime.strptime(str(cell_value), "%Y-%m-%d %H:%M:%S")
-                                    if parsed_date.year < 1900 or parsed_date.year > 9999:  # Excel's date limits
-                                        sheet[pi_sent_date_cell].value = ""
-                                except ValueError:
-                                    sheet[pi_sent_date_cell].value = ""
-
-                    # Now apply the date format
-                    if pi_sent_date_col:
-                        for row in range(2, sheet.max_row + 1):
-                            pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"
-                            sheet[pi_sent_date_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
-
-                # Check if all the required columns were found and apply formatting
+                # Check if all the required columns were found and apply formatting, we look for them using f" get column
                 if all([price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col,
-                        pi_sent_date_col, pi_eff_date_col]):
+                        pi_sent_date_col, pi_eff_date_col, twelve_month_col, nine_day_pi_col, ps_award_price_col,
+                        lw_price_col, lw_cost_col, ps_award_exp_col]):
                     for row in range(2, sheet.max_row + 1):  # Assuming row 1 is the header, so we start from row 2
-                        gp_cell = f"{get_column_letter(gp_col)}{row}"
-                        price_x_cell = f"{get_column_letter(price_x_col)}{row}"
-                        cost_cell = f"{get_column_letter(cost_col)}{row}"
-                        date_cell = f"{get_column_letter(date_col)}{row}"
-                        award_date_cell = f"{get_column_letter(award_date_col)}{row}"
-                        last_update_date_cell = f"{get_column_letter(last_update_date_col)}{row}"
-                        pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"
-                        pi_eff_date_cell = f"{get_column_letter(pi_eff_date_col)}{row}"
+                        gp_cell = f"{get_column_letter(gp_col)}{row}"  # GP % Column formatting
+                        price_x_cell = f"{get_column_letter(price_x_col)}{row}"  # Price cell formatting
+                        cost_cell = f"{get_column_letter(cost_col)}{row}"  # Cost cell formatting
+                        date_cell = f"{get_column_letter(date_col)}{row}"  # Date cell formatting
+                        award_date_cell = f"{get_column_letter(award_date_col)}{row}"  # Award Date cell formatting
+                        last_update_date_cell = f"{get_column_letter(last_update_date_col)}{row}"  # Last Update cell formatting
+                        pi_sent_date_cell = f"{get_column_letter(pi_sent_date_col)}{row}"  # Pi Sent Date cell formatting
+                        pi_eff_date_cell = f"{get_column_letter(pi_eff_date_col)}{row}"  # Pi Eff Date cell formatting
+                        twelve_month_cell = f"{get_column_letter(twelve_month_col)}{row}"  # 12 Month CPN cell formatting
+                        nine_day_pi_cell = f"{get_column_letter(nine_day_pi_col)}{row}"  # 90 Day Price cell formatting
+                        ps_award_price_cell = f"{get_column_letter(ps_award_price_col)}{row}"  # PS Awd Price cell formatting
+                        lw_price_cell = f"{get_column_letter(lw_price_col)}{row}"  # LW PRICE cell formatting
+                        lw_cost_cell = f"{get_column_letter(lw_cost_col)}{row}"  # LW Cost cell formatting
+                        ps_award_exp_cell = f"{get_column_letter(ps_award_exp_col)}{row}"  # PS Awd Exp cell formatting
 
-                        # Format the cells
+                        # Format for cells that we added the first portion of the col value is the column value in the active workbook
+                        # For instance lw_cost is LW Cost in our active workbook
                         sheet[price_x_cell].number_format = '$0.0000'  # Formats the Price cells accordingly
                         sheet[gp_cell].number_format = '0.00%'  # GP% as percent
                         sheet[cost_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
@@ -348,8 +346,14 @@ def perform_vlookup(button_to_disable):
                         sheet[last_update_date_cell].number_format = 'MM/DD/YYYY'  # Last Update Date as MM/DD/YYYY
                         sheet[pi_sent_date_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
                         sheet[pi_eff_date_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
+                        sheet[twelve_month_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
+                        sheet[nine_day_pi_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
+                        sheet[ps_award_price_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
+                        sheet[lw_price_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
+                        sheet[lw_cost_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
+                        sheet[ps_award_exp_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
 
-                        # Apply formula to GP%
+                        # Apply formula to GP%, this is the formula Jess provided for us (price - cost) / price
                         formula = f"=IF({price_x_cell}=0,0,({price_x_cell} - {cost_cell}) / {price_x_cell})"
                         sheet[gp_cell] = formula
 

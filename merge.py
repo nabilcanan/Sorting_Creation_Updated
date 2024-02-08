@@ -6,7 +6,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 def merge_files_and_create_lost_items(button_to_disable):
     print("merge_files_and_create_lost_items called")
-    file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC", 'Running File - 30 Day Notice Contract Price Increase_Sager -  COSTED']
+    file_names = ["Active Contract File", "Prev Contract", "Awards", "Backlog", "Sales History", "SND", "VPC", 'Running File - 30 Day Notice Co']
     file_paths = []
 
     for file_name in file_names:
@@ -38,11 +38,14 @@ def merge_files_and_create_lost_items(button_to_disable):
         lost_items_sheet.append(list(prev_df.columns))  # append headers only
 
     # Load and merge data from other files
-    for file_path, file_name in zip(file_paths[1:], file_names[1:]):  # Skip active_award_file
+    for file_path, file_name in zip(file_paths[1:], file_names[1:]):  # Adjusted to skip the first two files as before
         data = pd.read_excel(file_path)
 
+        # Determine a sheet name based on the file name. If it's the running file, name it "Price Increases"
+        sheet_name = "Price Increases" if file_name == "Running File - 30 Day Notice Co" else file_name
+
         # Create a new sheet for each file and add data to it
-        new_sheet = active_award_workbook.create_sheet(title=file_name)
+        new_sheet = active_award_workbook.create_sheet(title=sheet_name)
         for r in dataframe_to_rows(data, index=False, header=True):
             new_sheet.append(r)
 

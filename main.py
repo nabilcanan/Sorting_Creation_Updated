@@ -11,15 +11,16 @@ from merge import merge_files_and_create_lost_items
 # from add_running import add_running_file_to_workbook
 import webbrowser
 import os
-import pygame
-from threading import Thread
+
+# import pygame
+# from threading import Thread
 
 
-def play_background_music():
-    pygame.mixer.init()
-    pygame.mixer.music.load('images-videos/restaurant-music-110483.mp3')
-    pygame.mixer.music.play(-1)  # Play the music, -1 means play indefinitely in loop
-    pass
+# def play_background_music():
+#     pygame.mixer.init()
+#     pygame.mixer.music.load('images-videos/restaurant-music-110483.mp3')
+#     pygame.mixer.music.play(-1)  # Play the music, -1 means play indefinitely in loop
+#     pass
 
 
 warnings.simplefilter('ignore', UserWarning)
@@ -86,8 +87,8 @@ class ExcelSorter:
         # Bind the function to the MouseWheel event, to make our scrolling function more applicable 
         self.canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
-        music_thread = Thread(target=play_background_music, daemon=True)
-        music_thread.start()
+        # music_thread = Thread(target=play_background_music, daemon=True)
+        # music_thread.start()
 
     def create_widgets(self, frame):
         style = ttk.Style()
@@ -122,32 +123,23 @@ class ExcelSorter:
 
         run_queries_button = ttk.Button(frame, text="Run Queries", command=new_function, style="TButton")
         run_queries_button.pack(pady=10)
+
         print("Run Queries Button Called")
+        new_instructions = ttk.Label(
+            frame,
+            text="For the Sort Query Files Button you will select all\n of your Raw Queries at once for sorting.",
+            font=("Rupee", 19),
+            background="white",
+            anchor="center",
+            justify="center",
+            wraplength=1000
+        )
+        new_instructions.pack(pady=10)
 
-        self.sort_award_button = ttk.Button(frame, text="Sort Award File", command=self.sort_award_file,
-                                            style="TButton")
-        self.sort_award_button.pack(pady=10)
-        print("Sort Awards Button Called")
-
-        self.sort_backlog_button = ttk.Button(frame, text="Sort Backlog File", command=self.sort_backlog_file,
-                                              style="TButton")
-        self.sort_backlog_button.pack(pady=10)
-        print("Sort Backlog Button Called")
-
-        self.sort_last_ship_date_button = ttk.Button(frame, text="Sort Sales History File",
-                                                     command=self.sort_by_last_ship_date, style="TButton")
-        self.sort_last_ship_date_button.pack(pady=10)
-        print("Sort Sales History Button Called")
-
-        self.sort_ship_and_debit = ttk.Button(frame, text="Sort SND File",
-                                              command=self.sort_ship_and_debit,
-                                              style="TButton")
-        self.sort_ship_and_debit.pack(pady=10)
-        print("Sort SND Button Called")
-
-        self.sort_vpc = ttk.Button(frame, text="Sort VPC File", command=self.sort_vpc, style="TButton")
-        self.sort_vpc.pack(pady=10)
-        print("Sort VPC Button Called")
+        sort_multiple_files_button = ttk.Button(frame, text="Sort Query Files", command=self.sort_multiple_files,
+                                                style="TButton")
+        sort_multiple_files_button.pack(pady=10)
+        print("Sort Multiple Files Button Called")
 
         add_instructions_for_active_contracts_file = ttk.Label(
             frame,
@@ -191,35 +183,6 @@ class ExcelSorter:
         perform_vlookup_button.pack(pady=10)
         print("Perform V-lookup Button Called")
 
-        # add_instructions_for_active_contracts_file = ttk.Label(
-        #     frame,
-        #     text="For the 'Add Latest Running File' button\n"
-        #          "Select the Files in This order:\n"
-        #          "1. The file where we are adding the Running File.\n"
-        #          "2. The latest version of the Running file.",
-        #     font=("Rupee", 19),
-        #     background="white",
-        #     anchor="center",
-        #     justify="center",
-        #     wraplength=1000
-        # )
-        # add_instructions_for_active_contracts_file.pack(pady=2)
-
-        # add_running_file_button = ttk.Button(frame, text="Add Latest Running File",
-        #                                      command=lambda: add_running_file_to_workbook(add_running_file_button),
-        #                                      style="TButton")
-        # add_running_file_button.pack(pady=10)
-        # print("Add Runnning File Button Called")
-        #
-        # description_label = ttk.Label(frame, text="Feel free to check out the ReadMe for more detailed instructions",
-        #                               font=("Rupee", 18),
-        #                               background="white")
-        # description_label.pack(anchor='center')
-        #
-        # readme_button = ttk.Button(frame, text="Open ReadMe",
-        #                            command=open_readme_link, style="TButton")
-        # readme_button.pack(pady=10)
-
         logo_label = ttk.Label(frame, background="white")
         logo_label.pack(pady=10)
 
@@ -232,57 +195,38 @@ class ExcelSorter:
         for widget in frame.winfo_children():
             widget.pack_configure(pady=5)
 
-    @staticmethod
-    def select_file(file_type="Excel"):
-        print("Select File Function  called")
+    def sort_multiple_files(self):
+        print("Sort Multiple Files called")
+        file_paths = filedialog.askopenfilenames(title="Select Query Excel files to sort",
+                                                 filetypes=(("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")),
+                                                 initialdir="P:\Partnership_Python_Projects\Creation\python_creation_setup_demo")
+        if file_paths:
+            for file_path in file_paths:
+                if "Awards" in file_path:
+                    print(f"Sorting '{file_path}' as an Awards file.")
+                    self.sort_excel(file_path, ['Product ID', 'Award Cust ID'], [True, False], "Award")
+                elif "Backlog" in file_path:
+                    print(f"Sorting '{file_path}' as a Backlog file.")
+                    self.sort_excel(file_path, ['Product ID', 'Backlog Entry'], [True, False], "Backlog")
+                elif "Sales" in file_path:
+                    print(f"Sorting '{file_path}' as a Sales History file.")
+                    self.sort_excel(file_path, ['Product ID', 'Last Ship Date'], [True, False], "Sales History")
+                elif "SND" in file_path:
+                    print(f"Sorting '{file_path}' as a SND file.")
+                    self.sort_excel(file_path, ['Product ID', 'SND Cost'], [True, True], "Ship & Debit")
+                elif "VPC" in file_path:
+                    print(f"Sorting '{file_path}' as a VPC file.")
+                    self.sort_excel(file_path, ['PART ID', 'VPC Cost'], [True, False], "VPC")
+                else:
+                    print(f"File type for '{file_path}' not recognized. Skipping.")
 
-        file_path = filedialog.askopenfilename(title=f"Select {file_type} file",
-                                               filetypes=(
-                                                   ("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")),
-                                               initialdir="P:\Partnership_Python_Projects\Creation\python_creation_setup_demo")
-        
-        # loads and saves the files accordingly
-        if file_path:
-            return file_path
+            # After sorting all files, display a success message
+            messagebox.showinfo("Success", "All your queries have been sorted.")
+            print("All selected files have been sorted successfully.")
         else:
-            return None
-
-    # Here is where we will sort all the files we ran our queries from, this uses boolean variables
-    # Sorting them ascending and descending is the key for organization
-    def sort_award_file(self):
-        print("Sort Award File called")
-        file_path = self.select_file("Awards")
-        if file_path:
-            self.sort_excel(file_path, ['Product ID', 'Award Cust ID'], [True, False], "Award")
-            self.sort_award_button.config(state=tk.DISABLED)
-
-    def sort_backlog_file(self):
-        print("Sort Backlog File called")
-        file_path = self.select_file("Backlog")
-        if file_path:
-            self.sort_excel(file_path, ['Product ID', 'Backlog Entry'], [True, False], "Backlog")
-            self.sort_backlog_button.config(state=tk.DISABLED)
-
-    def sort_by_last_ship_date(self):
-        print("Sort Sales File called")
-        file_path = self.select_file("Sales")
-        if file_path:
-            self.sort_excel(file_path, ['Product ID', 'Last Ship Date'], [True, False], "Sales History")
-            self.sort_last_ship_date_button.config(state=tk.DISABLED)
-
-    def sort_ship_and_debit(self):
-        print("Sort Ship and Debit called")
-        file_path = self.select_file("SND")
-        if file_path:
-            self.sort_excel(file_path, ['Product ID', 'SND Cost'], [True, True], "Ship & Debit")
-            self.sort_ship_and_debit.config(state=tk.DISABLED)
-
-    def sort_vpc(self):
-        print("Sort VPC File called")
-        file_path = self.select_file("VPC")
-        if file_path:
-            self.sort_excel(file_path, ['PART ID', 'VPC Cost'], [True, False], "VPC")
-            self.sort_vpc.config(state=tk.DISABLED)
+            # This message will be shown if no files were selected
+            messagebox.showinfo("No Files Selected", "No files were selected for sorting.")
+            print("No files were selected for sorting.")
 
     @staticmethod  # This is for some exceptions where we have certain numbers in our Excel file
     def sort_excel(file_path, sort_columns, ascending_order, file_type=""):
@@ -313,7 +257,7 @@ class ExcelSorter:
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    @staticmethod # Write to data sheet for dataframes that are finished and merged
+    @staticmethod  # Write to data sheet for dataframes that are finished and merged
     def write_data_to_sheet(sheet, df):
         for r in dataframe_to_rows(df, index=False, header=True):
             sheet.append(r)
