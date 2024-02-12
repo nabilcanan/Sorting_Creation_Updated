@@ -57,18 +57,94 @@ def perform_vlookup(button_to_disable):
         # Apply the function to active_supplier_df
         active_supplier_df = update_mpn_match(active_supplier_df)
 
+        # ------------------ UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME ------------------
+        for idx, row in active_supplier_df.iterrows():
+            ipn = row['IPN']  # we use the IPN value to go back and forth between the awards dataframe
+            # Ensure both IPN columns are in a consistent format
+            active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
+            awards_df['Award CPN'] = awards_df['Award CPN'].astype(str).str.strip()
+
+            # Define a function to match IPNs considering non-numeric values as well
+            def match_ipns(awards_ipn, active_ipn):
+                # Implement your matching logic here, possibly using regex for flexible matching
+                # For simplicity, this example just uses a direct match, but you should adjust this as needed
+                return awards_ipn == active_ipn
+
+            # Apply matching logic to find matching indices
+            matching_indices = awards_df.apply(lambda row: match_ipns(row['Award CPN'], str(ipn)), axis=1)
+
+            if matching_indices.any():
+                # Convert 'End Date' to datetime and then to the desired string format
+                awards_df.loc[matching_indices, 'End Date'] = pd.to_datetime(
+                    awards_df.loc[matching_indices, 'End Date'],
+                    errors='coerce').dt.strftime('%m-%d-%Y')
+
+                # Drop rows where 'End Date' conversion resulted in NaT
+                awards_df = awards_df.dropna(subset=['End Date'])
+
+                # Recheck matching indices after potential row drops
+                matching_indices = (awards_df['Award CPN'] == str(ipn)) & awards_df['Award CPN'].str.isnumeric()
+
+                if not awards_df[matching_indices].empty:
+                    valid_end_dates = awards_df[matching_indices]
+                    latest_end_date = valid_end_dates['End Date'].max()
+                    active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date
+
+                    latest_price_row = valid_end_dates[valid_end_dates['End Date'] == latest_end_date]
+                    if pd.notna(latest_price_row['Award Price'].iloc[0]):
+                        active_supplier_df.at[idx, 'PS Award Price'] = latest_price_row['Award Price'].iloc[0]
+
+                # Update 'PS Awd Cust ID' with the first non-NA 'Award Cust ID' found for matched IPN
+                if matching_indices.any():
+                    first_matched_cust_id = awards_df.loc[matching_indices, 'Award Cust ID'].dropna().iloc[0]
+                    if pd.notna(first_matched_cust_id):
+                        active_supplier_df.at[idx, 'PS Awd Cust ID'] = first_matched_cust_id
+
+            active_supplier_df['PS Award Price'] = active_supplier_df['PS Award Price'].apply(pd.to_numeric,
+                                                                                              errors='coerce')
+            awards_df['Award Price'] = awards_df['Award Price'].apply(pd.to_numeric, errors='coerce')
+
+            # Create a dictionary for 'Award CPN' and their 'Award Price' from awards_df
+            award_price_mapping = awards_df.set_index('Award CPN')['Award Price'].to_dict()
+
+            # Perform the comparison and update 'Price Match Award'
+            active_supplier_df['Price Match Award'] = active_supplier_df.apply(
+                lambda x: 'Y' if np.isclose(award_price_mapping.get(x['IPN'], np.nan), x['PS Award Price'],
+                                            atol=1e-5) else 'N', axis=1
+            )
+        # ----------------------- End of Update Awards Detail in active dataframe -----------------------
+
+        # ------------------ UPDATE 'CORP AWARD LOADED' STATUS ------------------
+        # Normalize 'Award CPN' values from awards_df for a more accurate lookup (trim spaces, ensure consistent case)
+        normalized_award_cpn_set = set(awards_df['Award CPN'].str.strip().str.lower())
+
+        # Update 'Corp Award Loaded' based on the presence of a normalized 'IPN' in the normalized award CPN set
+        # Use a different variable name inside the lambda to avoid shadowing
+        active_supplier_df['Corp Awd Loaded'] = active_supplier_df['IPN'].str.strip().str.lower().apply(
+            lambda x: 'Y' if x in normalized_award_cpn_set else 'N'
+        )
+        # ------------------ End of Corp Award loaded status --------------------
+
         # ---------------- Adding the merge algorithm to bring in columns from prev contract dataframe --------------
         active_supplier_df = active_supplier_df.merge(
             prev_contract_df[
                 ['IPN', 'LW PRICE', 'PSoft Part',
                  "Contract Change", "count",
                  "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
-                 "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
-                 "Corp Awd Loaded", "90 DAY PI - NEW PRICE", "PI SENT DATE",
+                 "90 DAY PI - NEW PRICE", "PI SENT DATE",
                  "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
                  "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
                  "Review Note"]], on='IPN', how='left')
         # ---------------- End of Adding the merge algorithm to bring in columns from prev contract dataframe -------
+        # Assuming 'Price' is the column you want to sum and 'PSoft Part' is your condition column
+        # This will create a 'SUM' column based on the sum of 'Price' for each 'PSoft Part'
+        active_supplier_df['SUM'] = active_supplier_df.groupby('PSoft Part')['Price'].transform('sum')
+
+        # Assuming you already have a 'count' column calculated
+        active_supplier_df['AVG'] = active_supplier_df['SUM'] / active_supplier_df['count']
+
+        # Assuming 'Price' is the column you want to subtract from AVG to calculate DIFF
+        active_supplier_df['DIFF'] = active_supplier_df['AVG'] - active_supplier_df['Price']
 
         #  ------Calculate the counts for each 'PSoft Part' and display them with the value number we have ----------
         psoft_part_counts = active_supplier_df['PSoft Part'].value_counts()
@@ -200,70 +276,6 @@ def perform_vlookup(button_to_disable):
                 active_supplier_df.at[idx, 'Cost'] = matching_vpc.iloc[0, 1]
             # -----------------------------------------------------------------------------
 
-            # ------------------ UPDATE 'CORP AWARD LOADED' STATUS ------------------
-            # Normalize 'Award CPN' values from awards_df for a more accurate lookup (trim spaces, ensure consistent case)
-            normalized_award_cpn_set = set(awards_df['Award CPN'].str.strip().str.lower())
-
-            # Update 'Corp Award Loaded' based on the presence of a normalized 'IPN' in the normalized award CPN set
-            # Use a different variable name inside the lambda to avoid shadowing
-            active_supplier_df['Corp Awd Loaded'] = active_supplier_df['IPN'].str.strip().str.lower().apply(
-                lambda x: 'Y' if x in normalized_award_cpn_set else 'N'
-            )
-            # ------------------ End of Corp Award loaded status --------------------
-
-            # ------------------ PRICE MATCH CHECK BETWEEN ACTIVE SUPPLIER AND AWARDS DATAFRAME ------------------
-            # Convert prices to a consistent type (e.g., float) and round to a certain decimal precision if needed
-            active_supplier_df['PS Award Price'] = active_supplier_df['PS Award Price'].apply(pd.to_numeric,
-                                                                                              errors='coerce')
-            awards_df['Award Price'] = awards_df['Award Price'].apply(pd.to_numeric, errors='coerce')
-
-            # Create a dictionary for 'Award CPN' and their 'Award Price' from awards_df
-            award_price_mapping = awards_df.set_index('Award CPN')['Award Price'].to_dict()
-
-            # Perform the comparison and update 'Price Match Award'
-            active_supplier_df['Price Match Award'] = active_supplier_df.apply(
-                lambda x: 'Y' if np.isclose(award_price_mapping.get(x['IPN'], np.nan), x['PS Award Price'],
-                                            atol=1e-5) else 'N', axis=1
-            )
-            # ------------------ end of Price match between CPN and awards dataframe -----------------------------
-
-            # ------------------ UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME ------------------
-
-            # Find matching rows in 'Awards' where 'Award CPN' matches the 'ipn' (Item Part Number)
-            matching_indices = awards_df['Award CPN'] == ipn
-
-            # Check if there are any matching indices
-            if matching_indices.any():
-
-                # Convert 'End Date' to datetime and then to the desired string format in 'awards_df'
-                awards_df.loc[matching_indices, 'End Date'] = pd.to_datetime(
-                    awards_df.loc[matching_indices, 'End Date'],
-                    errors='coerce').dt.strftime('%m-%d-%Y')
-
-                # Drop rows where 'End Date' conversion resulted in NaT (not a time) to ensure we have valid end dates
-                awards_df = awards_df.dropna(subset=['End Date'])
-
-                # Update 'PS Award Exp Date' and 'PS Award Price' based on the latest 'End Date'
-                if not awards_df[matching_indices].empty:
-                    valid_end_dates = awards_df[matching_indices]
-                    latest_end_date = valid_end_dates['End Date'].max()
-                    active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date
-
-                    # Assuming 'Award Price' associated with the latest 'End Date'
-                    latest_price_row = valid_end_dates[valid_end_dates['End Date'] == latest_end_date]
-                    if pd.notna(latest_price_row['Award Price'].iloc[0]):
-                        active_supplier_df.at[idx, 'PS Award Price'] = latest_price_row['Award Price'].iloc[0]
-
-                # Update 'PS Awd Cust ID' separately
-                # This is done outside the 'End Date' logic to ensure 'Award Cust ID' is updated based on matching 'Award CPN' alone
-                if matching_indices.any():
-                    # Assuming we want to bring in the first 'Award Cust ID' found for matched IPN, independent of the 'End Date'
-                    first_matched_cust_id = awards_df.loc[matching_indices, 'Award Cust ID'].dropna().iloc[0]
-                    if pd.notna(first_matched_cust_id):
-                        active_supplier_df.at[idx, 'PS Awd Cust ID'] = first_matched_cust_id
-
-            # ----------------------- End of Update Awards Detail in active dataframe -----------------------
-
         # Convert the 'PS Award Exp Date' in active_supplier_df to 'MM-DD-YYYY' format
         active_supplier_df['PS Award Exp Date'] = pd.to_datetime(active_supplier_df['PS Award Exp Date'],
                                                                  errors='coerce').dt.strftime('%m-%d-%Y')
@@ -333,8 +345,9 @@ def perform_vlookup(button_to_disable):
                 # LW PRICE, Lw Cost, PS Award Exp Date
                 price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, \
                     pi_sent_date_col, pi_eff_date_col, twelve_month_col, nine_day_pi_col, \
-                    ps_award_price_col, lw_price_col, lw_cost_col, ps_award_exp_col = \
-                    None, None, None, None, None, None, None, None, None, None, None, None, None, None
+                    ps_award_price_col, lw_price_col, lw_cost_col, ps_award_exp_col, sum_value_col, \
+                    avg_value_col, diff_value_col = \
+                    None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
                     col_val = col_cells[
@@ -367,11 +380,17 @@ def perform_vlookup(button_to_disable):
                         lw_cost_col = col_num
                     elif col_val == 'PS Award Exp Date':
                         ps_award_exp_col = col_num
+                    elif col_val == "SUM":
+                        sum_value_col = col_num
+                    elif col_val == "AVG":
+                        avg_value_col = col_num
+                    elif col_val == "DIFF":
+                        diff_value_col = col_num
 
                 # Check if all the required columns were found and apply formatting, we look for them using f" get column
                 if all([price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col,
                         pi_sent_date_col, pi_eff_date_col, twelve_month_col, nine_day_pi_col, ps_award_price_col,
-                        lw_price_col, lw_cost_col, ps_award_exp_col]):
+                        lw_price_col, lw_cost_col, ps_award_exp_col, sum_value_col, avg_value_col, diff_value_col]):
                     for row in range(2, sheet.max_row + 1):  # Assuming row 1 is the header, so we start from row 2
                         gp_cell = f"{get_column_letter(gp_col)}{row}"  # GP % Column formatting
                         price_x_cell = f"{get_column_letter(price_x_col)}{row}"  # Price cell formatting
@@ -387,6 +406,9 @@ def perform_vlookup(button_to_disable):
                         lw_price_cell = f"{get_column_letter(lw_price_col)}{row}"  # LW PRICE cell formatting
                         lw_cost_cell = f"{get_column_letter(lw_cost_col)}{row}"  # LW Cost cell formatting
                         ps_award_exp_cell = f"{get_column_letter(ps_award_exp_col)}{row}"  # PS Awd Exp cell formatting
+                        sum_cell = f"{get_column_letter(sum_value_col)}{row}"  # PS Awd Exp cell formatting
+                        avg_cell = f"{get_column_letter(avg_value_col)}{row}"  # PS Awd Exp cell formatting
+                        diff_cell = f"{get_column_letter(diff_value_col)}{row}"  # PS Awd Exp cell formatting
 
                         # Format for cells that we added the first portion of the col value is the column value in the active workbook
                         # For instance lw_cost is LW Cost in our active workbook
@@ -404,22 +426,13 @@ def perform_vlookup(button_to_disable):
                         sheet[lw_price_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
                         sheet[lw_cost_cell].number_format = '$0.0000'  # Cost as dollar with four decimal places
                         sheet[ps_award_exp_cell].number_format = 'MM/DD/YYYY'  # Format as MM/DD/YYYY
+                        sheet[sum_cell].number_format = '$0.0000'  # SUM as dollar with four decimal places
+                        sheet[avg_cell].number_format = '$0.0000'  # AVG as dollar with four decimal places
+                        sheet[diff_cell].number_format = '$0.0000'  # DIFF as dollar with four decimal places
 
                         # Apply formula to GP%, this is the formula Jess provided for us (price - cost) / price
                         formula = f"=IF({price_x_cell}=0,0,({price_x_cell} - {cost_cell}) / {price_x_cell})"
                         sheet[gp_cell] = formula
-                        # for row in range(2, sheet.max_row + 1):  # Start from row 2 to skip the header
-                        #     # Assuming 'I' is the Price column, 'AM' is where we would have placed SUM if pre-calculated
-                        #     # AVG Formula: SUM (from column 'AM') / Count (Assuming count is in 'AN')
-                        #     avg_cell = f'AO{row}'
-                        #     sum_cell = f'AM{row}'  # Placeholder, since SUMIF would typically be pre-calculated
-                        #     count_cell = f'AN{row}'
-                        #     sheet[avg_cell].value = f'={sum_cell}/{count_cell}'
-                        #
-                        #     # DIFF Formula: AVG (from column 'AO') - Price (from column 'I')
-                        #     diff_cell = f'AP{row}'
-                        #     price_cell = f'I{row}'
-                        #     sheet[diff_cell].value = f'={avg_cell}-{price_cell}'
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
                     if col_cells[0].value in headers_to_color:
