@@ -39,28 +39,35 @@ def perform_vlookup(button_to_disable):
         # Rename the 'Price' column from 'Prev Contract' dataframe to 'LW PRICE'
         prev_contract_df.rename(columns={'Price': 'LW PRICE'}, inplace=True)
 
-        # We will add this in after we discuss in our meeting, basically we are going into the prev contract
-        # and bringing in the Cost column and brining it into the LW Cost column the yellow one at the end of
-        # the active dataframe
-        # # ------------------ MERGE 'LW COST' FROM PREV CONTRACT TO ACTIVE SUPPLIER DF ------------------
-        # if 'Cost' in prev_contract_df.columns:
-        #     prev_contract_df.rename(columns={'Cost': 'LW Cost'}, inplace=True)
-        #     lw_cost_mapping = prev_contract_df.set_index('IPN')['LW Cost'].to_dict()
-        #     active_supplier_df['LW Cost'] = active_supplier_df['IPN'].map(lw_cost_mapping)
-        # # ------------------ Enb of MERGE 'LW COST' FROM PREV CONTRACT TO ACTIVE SUPPLIER DF ------------
+        # Rename 'MPN' in prev_contract_df to 'LW MPN'
+        prev_contract_df.rename(columns={'MPN': 'LW MPN'}, inplace=True)
+
+        # Merge 'LW MPN' from prev_contract_df into active_supplier_df as 'Prev Contract MPN'
+        active_supplier_df = pd.merge(
+            active_supplier_df,
+            prev_contract_df[['IPN', 'LW MPN']],
+            on='IPN',
+            how='left'
+        ).rename(columns={'LW MPN': 'Prev Contract MPN'})
+
+        def update_mpn_match(df):
+            df['MPN Match'] = np.where(df['MPN'] == df['Prev Contract MPN'], 'Y', 'N')
+            return df
+
+        # Apply the function to active_supplier_df
+        active_supplier_df = update_mpn_match(active_supplier_df)
 
         # ---------------- Adding the merge algorithm to bring in columns from prev contract dataframe --------------
         active_supplier_df = active_supplier_df.merge(
             prev_contract_df[
-                ['IPN', 'LW PRICE', 'PSoft Part', "Prev Contract MPN", "MPN Match",
-                 "Price Match MPN",
+                ['IPN', 'LW PRICE', 'PSoft Part',
                  "Contract Change", "count",
-                 "Corrected PSID Ct", "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
+                 "SUM", "AVG", "DIFF", "PSID All Contract Prices Same?",
                  "PS Award Price", "PS Award Exp Date", "PS Awd Cust ID", "Price Match Award",
                  "Corp Awd Loaded", "90 DAY PI - NEW PRICE", "PI SENT DATE",
                  "DIFF Price Increase", "PI EFF DATE", "12 Month CPN Sales", "GP%", "Cost",
                  "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
-                 "Review Note", "LW Cost", "LW Quote#", "LW Cost Exp Date", "LW Review Note"]], on='IPN', how='left')
+                 "Review Note"]], on='IPN', how='left')
         # ---------------- End of Adding the merge algorithm to bring in columns from prev contract dataframe -------
 
         #  ------Calculate the counts for each 'PSoft Part' and display them with the value number we have ----------
@@ -76,6 +83,8 @@ def perform_vlookup(button_to_disable):
         for idx, row in active_supplier_df.iterrows():
             ipn = row['IPN']  # we use the IPN value to go back and forth between the awards dataframe
             psoft_part = row['PSoft Part']
+
+            # ----------------- Bringing in MPN Column and then renaming it for comparison --------------------
 
             # ------------------ Running File logic to check IPN and bring in Unit Price New ------------------
             # This logic checks the IPN in the active dataframe and the creation part number in the running file and
@@ -102,7 +111,49 @@ def perform_vlookup(button_to_disable):
                     matching_running_file.iloc[0, 4]):  # Assuming column E is in the 4 column index 4
                 active_supplier_df.at[idx, 'PI EFF DATE'] = matching_running_file.iloc[
                     0, 4]  # Assuming column V is in the 22nd column index 21
+
+            # Check if a match is found
+            if not matching_running_file.empty:
+                # Extract the price from the active_supplier_df for the current IPN
+                active_price = active_supplier_df.loc[idx, 'Price']
+
+                # Assuming column L in the running file dataframe is the price column (index 11)
+                running_price = matching_running_file.iloc[0, 11]
+
+                # Check if both prices are not NaN
+                if not pd.isna(active_price) and not pd.isna(running_price):
+                    # Calculate the difference between the active price and the running file price
+                    price_difference = active_price - running_price
+
+                    # Update the "DIFF Price Increase" column in active_supplier_df with the calculated price difference
+                    active_supplier_df.at[idx, 'DIFF Price Increase'] = price_difference
+
             # ------------------ End of Running File logic to check IPN and bring in Unit Price New ---------------
+
+            # ------------------- Logic for updated the LW Cost and so on --------------------------------------
+            # Assuming the IPN is in the first column for both dataframes
+            # Iterate through the active_supplier_df to update each row based on matching IPN in prev_contract_df
+            # Ensure IPN columns in both DataFrames are of the same type and prepared for matching
+            active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
+            prev_contract_df['IPN'] = prev_contract_df['IPN'].astype(str).str.strip()
+
+            # Perform the merge operation to bring in the 'Cost' related columns from prev_contract_df
+            # Here, we're creating a new DataFrame as a result of this merge to review the merge result before applying it back to active_supplier_df
+            merged_df = pd.merge(
+                active_supplier_df,
+                prev_contract_df[['IPN', 'Cost', 'Cost Note', 'Quote#', 'Cost Exp Date', 'Review Note']],
+                on='IPN',
+                how='left',
+                suffixes=('', '_prev')
+            )
+
+            # Now, update active_supplier_df with the merged data
+            # This avoids direct row-by-row iteration and uses efficient pandas operations
+            active_supplier_df['LW Cost'] = merged_df['Cost_prev']
+            active_supplier_df['LW Cost Note'] = merged_df['Cost Note_prev']
+            active_supplier_df['LW Quote#'] = merged_df['Quote#_prev']
+            active_supplier_df['LW Cost Exp Date'] = merged_df['Cost Exp Date_prev']
+            active_supplier_df['LW Review Note'] = merged_df['Review Note_prev']
 
             # ------------------ BACKLOG VALUE MAPPING TO LOST ITEMS ------------------
             # Create a mapping from 'Backlog CPN' to 'Backlog Value' in backlog_df
@@ -113,6 +164,8 @@ def perform_vlookup(button_to_disable):
             lost_items_df['Backlog Value'] = lost_items_df['Backlog Value'].apply(
                 lambda x: "" if pd.isnull(x) or x == 0 else "${:,.2f}".format(x))
             # ---------------------------------------------------------------------------
+
+            # Adding Prev count and keep count formula for changes
 
             # ------------------- 12 Month CPN Sales Column Logic ----------------------
             # Example column name: 'YourDateColumnName'
@@ -178,40 +231,41 @@ def perform_vlookup(button_to_disable):
 
             # Find matching rows in 'Awards' where 'Award CPN' matches the 'ipn' (Item Part Number)
             matching_indices = awards_df['Award CPN'] == ipn
-
+            active_supplier_df['PS Awd Cust ID'] = np.nan
+            active_supplier_df['PS Award Price'] = np.nan
             # Check if there are any matching indices
             if matching_indices.any():
 
                 # Convert 'End Date' to datetime and then to the desired string format in 'awards_df'
-                # We are modifying 'awards_df' in place
                 awards_df.loc[matching_indices, 'End Date'] = pd.to_datetime(
                     awards_df.loc[matching_indices, 'End Date'],
                     errors='coerce').dt.strftime('%m-%d-%Y')
 
                 # Drop rows where 'End Date' conversion resulted in NaT (not a time) to ensure we have valid end dates
-                valid_end_dates = awards_df.loc[matching_indices].dropna(subset=['End Date'])
+                awards_df = awards_df.dropna(subset=['End Date'])
+                if matching_indices.any():
+                    # Convert 'End Date' to datetime and format it
+                    awards_df.loc[matching_indices, 'End Date'] = pd.to_datetime(
+                        awards_df.loc[matching_indices, 'End Date'], errors='coerce').dt.strftime('%m-%d-%Y')
 
-                # Check if there are any rows with valid end dates
-                if not valid_end_dates.empty:
+                    # Filter out rows with NaT in 'End Date' after conversion
+                    valid_awards = awards_df.loc[matching_indices].dropna(subset=['End Date'])
 
-                    # Find the latest 'End Date' among the valid ones
-                    latest_end_date = valid_end_dates['End Date'].max()
+                    if not valid_awards.empty:
+                        # Find the latest 'End Date' and corresponding 'Award Price'
+                        latest_end_date = valid_awards['End Date'].max()
+                        latest_price_row = valid_awards[valid_awards['End Date'] == latest_end_date]
 
-                    # Update 'PS Award Exp Date' in 'active_supplier_df' with the latest 'End Date'
-                    # We are bringing in 'End Date' from 'awards_df' to 'active_supplier_df'
-                    active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date
+                        # Update 'PS Award Exp Date' and 'PS Award Price'
+                        if not latest_price_row.empty:
+                            active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date
+                            active_supplier_df.at[idx, 'PS Award Price'] = latest_price_row.iloc[0]['Award Price']
 
-                    # Update 'PS Award Price' in 'active_supplier_df' if available
-                    # We are bringing in 'Award Price' from 'awards_df' to 'active_supplier_df'
-                    # This assumes the 'Award Price' is associated with the latest 'End Date'
-                    if pd.notna(valid_end_dates['Award Price'].iloc[0]):
-                        active_supplier_df.at[idx, 'PS Award Price'] = valid_end_dates['Award Price'].iloc[0]
-
-                    # Update 'PS Awd Cust ID' in 'active_supplier_df' if available
-                    # We are bringing in 'Award Cust ID' from 'awards_df' to 'active_supplier_df'
-                    # This assumes the 'Award Cust ID' is associated with the latest 'End Date'
-                    if pd.notna(valid_end_dates['Award Cust ID'].iloc[0]):
-                        active_supplier_df.at[idx, 'PS Awd Cust ID'] = valid_end_dates['Award Cust ID'].iloc[0]
+                        # Update 'PS Awd Cust ID' only if there's a match
+                        first_matched_cust_id = valid_awards['Award Cust ID'].dropna().iloc[0] if not valid_awards[
+                            'Award Cust ID'].dropna().empty else np.nan
+                        active_supplier_df.at[idx, 'PS Awd Cust ID'] = first_matched_cust_id
+                # No else part is needed as 'PS Award Price' is already initialized to NaN for non-matching cases
 
             # ----------------------- End of Update Awards Detail in active dataframe -----------------------
 
@@ -280,13 +334,16 @@ def perform_vlookup(button_to_disable):
 
                 # --------------------- Additional formatting for specific columns -----------------------------
                 # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'
+                # Pi Sent date, pi eff date, 12 month CPN Sales, 90 DAY PI - NEW PRICE, PS Award Price
+                # LW PRICE, Lw Cost, PS Award Exp Date
                 price_x_col, cost_col, gp_col, date_col, award_date_col, last_update_date_col, \
                     pi_sent_date_col, pi_eff_date_col, twelve_month_col, nine_day_pi_col, \
                     ps_award_price_col, lw_price_col, lw_cost_col, ps_award_exp_col = \
                     None, None, None, None, None, None, None, None, None, None, None, None, None, None
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
-                    col_val = col_cells[0].value  # header value in current column
+                    col_val = col_cells[
+                        0].value  # header value in current column, 0 because we start at index 0 and header = 1
                     if col_val == 'Price':
                         price_x_col = col_num
                     elif col_val == 'Cost':
@@ -356,6 +413,18 @@ def perform_vlookup(button_to_disable):
                         # Apply formula to GP%, this is the formula Jess provided for us (price - cost) / price
                         formula = f"=IF({price_x_cell}=0,0,({price_x_cell} - {cost_cell}) / {price_x_cell})"
                         sheet[gp_cell] = formula
+                        # for row in range(2, sheet.max_row + 1):  # Start from row 2 to skip the header
+                        #     # Assuming 'I' is the Price column, 'AM' is where we would have placed SUM if pre-calculated
+                        #     # AVG Formula: SUM (from column 'AM') / Count (Assuming count is in 'AN')
+                        #     avg_cell = f'AO{row}'
+                        #     sum_cell = f'AM{row}'  # Placeholder, since SUMIF would typically be pre-calculated
+                        #     count_cell = f'AN{row}'
+                        #     sheet[avg_cell].value = f'={sum_cell}/{count_cell}'
+                        #
+                        #     # DIFF Formula: AVG (from column 'AO') - Price (from column 'I')
+                        #     diff_cell = f'AP{row}'
+                        #     price_cell = f'I{row}'
+                        #     sheet[diff_cell].value = f'={avg_cell}-{price_cell}'
 
                 for col_num, col_cells in enumerate(sheet.columns, start=1):
                     if col_cells[0].value in headers_to_color:

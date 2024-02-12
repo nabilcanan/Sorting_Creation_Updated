@@ -62,6 +62,7 @@ headers_to_color = {
     'LW Cost': "FFFF00",
     'LW Quote#': "FFFF00",
     'LW Cost Exp Date': "FFFF00",
-    'LW Review Note': "FFFF00"
+    'LW Review Note': "FFFF00",
+    'LW Cost Note': "FFFF00"
 
 }
