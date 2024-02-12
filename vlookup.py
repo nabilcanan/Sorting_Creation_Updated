@@ -136,7 +136,8 @@ def perform_vlookup(button_to_disable):
                  "Cost Note", "Quote#", "Cost Exp Date", "Cost MOQ",
                  "Review Note"]], on='IPN', how='left')
         # ---------------- End of Adding the merge algorithm to bring in columns from prev contract dataframe -------
-        # Assuming 'Price' is the column you want to sum and 'PSoft Part' is your condition column
+
+        # ---------------- Formulas for the Sum Diff and Avg columns --------------------------------------
         # This will create a 'SUM' column based on the sum of 'Price' for each 'PSoft Part'
         active_supplier_df['SUM'] = active_supplier_df.groupby('PSoft Part')['Price'].transform('sum')
 
@@ -145,6 +146,7 @@ def perform_vlookup(button_to_disable):
 
         # Assuming 'Price' is the column you want to subtract from AVG to calculate DIFF
         active_supplier_df['DIFF'] = active_supplier_df['AVG'] - active_supplier_df['Price']
+        # ---------------- End of Formulas for the Sum Diff and Avg columns --------------------------------------
 
         #  ------Calculate the counts for each 'PSoft Part' and display them with the value number we have ----------
         psoft_part_counts = active_supplier_df['PSoft Part'].value_counts()
@@ -240,8 +242,6 @@ def perform_vlookup(button_to_disable):
             lost_items_df['Backlog Value'] = lost_items_df['Backlog Value'].apply(
                 lambda x: "" if pd.isnull(x) or x == 0 else "${:,.2f}".format(x))
             # ---------------------------------------------------------------------------
-
-            # Adding Prev count and keep count formula for changes
 
             # ------------------- 12 Month CPN Sales Column Logic ----------------------
             # Example column name: 'YourDateColumnName'
@@ -406,9 +406,9 @@ def perform_vlookup(button_to_disable):
                         lw_price_cell = f"{get_column_letter(lw_price_col)}{row}"  # LW PRICE cell formatting
                         lw_cost_cell = f"{get_column_letter(lw_cost_col)}{row}"  # LW Cost cell formatting
                         ps_award_exp_cell = f"{get_column_letter(ps_award_exp_col)}{row}"  # PS Awd Exp cell formatting
-                        sum_cell = f"{get_column_letter(sum_value_col)}{row}"  # PS Awd Exp cell formatting
-                        avg_cell = f"{get_column_letter(avg_value_col)}{row}"  # PS Awd Exp cell formatting
-                        diff_cell = f"{get_column_letter(diff_value_col)}{row}"  # PS Awd Exp cell formatting
+                        sum_cell = f"{get_column_letter(sum_value_col)}{row}"  # Sum Cell formatting
+                        avg_cell = f"{get_column_letter(avg_value_col)}{row}"  # Avg cell formatting to numeric value
+                        diff_cell = f"{get_column_letter(diff_value_col)}{row}"  # Diff cell formatting to numeric value
 
                         # Format for cells that we added the first portion of the col value is the column value in the active workbook
                         # For instance lw_cost is LW Cost in our active workbook
