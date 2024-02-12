@@ -231,8 +231,7 @@ def perform_vlookup(button_to_disable):
 
             # Find matching rows in 'Awards' where 'Award CPN' matches the 'ipn' (Item Part Number)
             matching_indices = awards_df['Award CPN'] == ipn
-            active_supplier_df['PS Awd Cust ID'] = np.nan
-            active_supplier_df['PS Award Price'] = np.nan
+
             # Check if there are any matching indices
             if matching_indices.any():
 
@@ -243,29 +242,25 @@ def perform_vlookup(button_to_disable):
 
                 # Drop rows where 'End Date' conversion resulted in NaT (not a time) to ensure we have valid end dates
                 awards_df = awards_df.dropna(subset=['End Date'])
+
+                # Update 'PS Award Exp Date' and 'PS Award Price' based on the latest 'End Date'
+                if not awards_df[matching_indices].empty:
+                    valid_end_dates = awards_df[matching_indices]
+                    latest_end_date = valid_end_dates['End Date'].max()
+                    active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date
+
+                    # Assuming 'Award Price' associated with the latest 'End Date'
+                    latest_price_row = valid_end_dates[valid_end_dates['End Date'] == latest_end_date]
+                    if pd.notna(latest_price_row['Award Price'].iloc[0]):
+                        active_supplier_df.at[idx, 'PS Award Price'] = latest_price_row['Award Price'].iloc[0]
+
+                # Update 'PS Awd Cust ID' separately
+                # This is done outside the 'End Date' logic to ensure 'Award Cust ID' is updated based on matching 'Award CPN' alone
                 if matching_indices.any():
-                    # Convert 'End Date' to datetime and format it
-                    awards_df.loc[matching_indices, 'End Date'] = pd.to_datetime(
-                        awards_df.loc[matching_indices, 'End Date'], errors='coerce').dt.strftime('%m-%d-%Y')
-
-                    # Filter out rows with NaT in 'End Date' after conversion
-                    valid_awards = awards_df.loc[matching_indices].dropna(subset=['End Date'])
-
-                    if not valid_awards.empty:
-                        # Find the latest 'End Date' and corresponding 'Award Price'
-                        latest_end_date = valid_awards['End Date'].max()
-                        latest_price_row = valid_awards[valid_awards['End Date'] == latest_end_date]
-
-                        # Update 'PS Award Exp Date' and 'PS Award Price'
-                        if not latest_price_row.empty:
-                            active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date
-                            active_supplier_df.at[idx, 'PS Award Price'] = latest_price_row.iloc[0]['Award Price']
-
-                        # Update 'PS Awd Cust ID' only if there's a match
-                        first_matched_cust_id = valid_awards['Award Cust ID'].dropna().iloc[0] if not valid_awards[
-                            'Award Cust ID'].dropna().empty else np.nan
+                    # Assuming we want to bring in the first 'Award Cust ID' found for matched IPN, independent of the 'End Date'
+                    first_matched_cust_id = awards_df.loc[matching_indices, 'Award Cust ID'].dropna().iloc[0]
+                    if pd.notna(first_matched_cust_id):
                         active_supplier_df.at[idx, 'PS Awd Cust ID'] = first_matched_cust_id
-                # No else part is needed as 'PS Award Price' is already initialized to NaN for non-matching cases
 
             # ----------------------- End of Update Awards Detail in active dataframe -----------------------
 
