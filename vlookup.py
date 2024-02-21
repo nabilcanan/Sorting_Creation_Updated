@@ -170,43 +170,40 @@ def perform_vlookup(button_to_disable):
             # for all the data from the running file that we need in the active workbook, therefor it does this for
             # "90 DAY PI - NEW PRICE", "PI SENT DATE","PI EFF DATE",
             # Search for a matching IPN value in the running_file_df
-            matching_running_file = running_file_df[running_file_df['Creation Part Number'] == ipn]
-            # Check if a match is found and the corresponding value in the desired column (column L) is not NaN
-            if not matching_running_file.empty and not pd.isna(
-                    matching_running_file.iloc[0, 11]):  # Assuming column L is the 12th column (index 11)
-                # Update the "90 DAY PI - NEW PRICE" column in active_supplier_df with the extracted value
-                active_supplier_df.at[idx, '90 DAY PI - NEW PRICE'] = matching_running_file.iloc[
-                    0, 11]  # Assuming column L is the 12th column (index 11)
+            # Get the current year
+            current_year = datetime.now().year
 
+            # Search for a matching IPN value in the running_file_df for "90 DAY PI - NEW PRICE"
             matching_running_file = running_file_df[running_file_df['Creation Part Number'] == ipn]
-            if not matching_running_file.empty and not pd.isna(
-                    matching_running_file.iloc[0, 21]):  # Assuming column V is in the 22nd column index 21
-                active_supplier_df.at[idx, 'PI SENT DATE'] = matching_running_file.iloc[
-                    0, 21]  # Assuming column V is in the 22nd column index 21
+            if not matching_running_file.empty and not pd.isna(matching_running_file.iloc[0, 11]):
+                active_supplier_df.at[idx, '90 DAY PI - NEW PRICE'] = matching_running_file.iloc[0, 11]
 
+            # For "PI SENT DATE" with the year check
             matching_running_file = running_file_df[running_file_df['Creation Part Number'] == ipn]
-            if not matching_running_file.empty and not pd.isna(
-                    matching_running_file.iloc[0, 4]):  # Assuming column E is in the 4 column index 4
-                active_supplier_df.at[idx, 'PI EFF DATE'] = matching_running_file.iloc[
-                    0, 4]  # Assuming column V is in the 22nd column index 21
+            if not matching_running_file.empty:
+                pi_sent_date_raw = matching_running_file.iloc[0, 21]  # Assuming column V
+                pi_sent_date = pd.to_datetime(pi_sent_date_raw, errors='coerce')  # Convert to datetime
+                if pd.notnull(pi_sent_date) and pi_sent_date.year == current_year:
+                    active_supplier_df.at[idx, 'PI SENT DATE'] = pi_sent_date
 
-            # Check if a match is found
+            # For "PI EFF DATE" with the year check
+            matching_running_file = running_file_df[running_file_df['Creation Part Number'] == ipn]
+            if not matching_running_file.empty:
+                pi_eff_date_raw = matching_running_file.iloc[0, 4]  # Assuming column E
+                pi_eff_date = pd.to_datetime(pi_eff_date_raw, errors='coerce')  # Convert to datetime
+                if pd.notnull(pi_eff_date) and pi_eff_date.year == current_year:
+                    active_supplier_df.at[idx, 'PI EFF DATE'] = pi_eff_date
+
+            # Check if a match is found for price difference calculation
             if not matching_running_file.empty:
                 # Extract the price from the active_supplier_df for the current IPN
                 active_price = active_supplier_df.loc[idx, 'Price']
+                running_price = matching_running_file.iloc[0, 11]  # Assuming column L for price
 
-                # Assuming column L in the running file dataframe is the price column (index 11)
-                running_price = matching_running_file.iloc[0, 11]
-
-                # Check if both prices are not NaN
+                # Check if both prices are not NaN and calculate the difference
                 if not pd.isna(active_price) and not pd.isna(running_price):
-                    # Calculate the difference between the active price and the running file price
                     price_difference = active_price - running_price
-
-                    # Update the "DIFF Price Increase" column in active_supplier_df with the calculated price difference
                     active_supplier_df.at[idx, 'DIFF Price Increase'] = price_difference
-
-            # ------------------ End of Running File logic to check IPN and bring in Unit Price New ---------------
 
             # ------------------- Logic for updated the LW Cost and so on --------------------------------------
             # Assuming the IPN is in the first column for both dataframes
@@ -261,19 +258,37 @@ def perform_vlookup(button_to_disable):
             active_supplier_df['12 Month CPN Sales'] = active_supplier_df['IPN'].map(sales_net_mapping)
             # -----------------------------------------------------------------------------------
 
-            # ------------ SND Cost updates Logic -----------------------------------------
-            # Check SND using the 'Product ID' column
-            matching_snd = snd_df[snd_df['Product ID'] == psoft_part]
-            if not matching_snd.empty and not pd.isna(matching_snd.iloc[0, 1]):
-                active_supplier_df.at[idx, 'Cost'] = matching_snd.iloc[0, 1]
-                continue  # If found in SND, skip checking VPC for the same PSoft Part
-            # -----------------------------------------------------------------------------
+            # ------------------------ SND and VPC Logic ----------------------------------------
 
-            # ------------ VPC Cost updates Logic -----------------------------------------
-            # Check VPC using the 'PART ID' column
-            matching_vpc = vpc_df[vpc_df['PART ID'] == psoft_part]
-            if not matching_vpc.empty and not pd.isna(matching_vpc.iloc[0, 1]):
-                active_supplier_df.at[idx, 'Cost'] = matching_vpc.iloc[0, 1]
+            # Check for a matching entry in the SND dataframe
+            matching_snd = snd_df[snd_df['Product ID'].astype(str) == str(psoft_part)]
+            if not matching_snd.empty:
+                # print(f"Match found in SND for PSoft Part: {psoft_part}")
+                # Assume the first match is the one we want
+                matching_record = matching_snd.iloc[0]
+                # Update the active workbook with the SND data
+                active_supplier_df.at[idx, 'Cost Exp Date'] = matching_record.get('SND Exp Date',
+                                                                                  row['Cost Exp Date'])
+                active_supplier_df.at[idx, 'Quote#'] = matching_record.get('SND Quote', row['Quote#'])
+                active_supplier_df.at[idx, 'Cost MOQ'] = matching_record.get('SND MOQ', row['Cost MOQ'])
+
+            # Check for a matching entry in the VPC dataframe
+            matching_vpc = vpc_df[vpc_df['PART ID'].astype(str) == str(psoft_part)]
+            if not matching_vpc.empty:
+                # print(f"Match found in VPC for PSoft Part: {psoft_part}")
+                # Assume the first match is the one we want
+                matching_record = matching_vpc.iloc[0]
+                # Update the active workbook with the VPC data
+                # If SND has already provided a value, you might want to decide which source has priority
+                active_supplier_df.at[idx, 'Cost Exp Date'] = matching_record.get('VPC Exp Date',
+                                                                                  row['Cost Exp Date'])
+                active_supplier_df.at[idx, 'Quote#'] = matching_record.get('VPC Quote', row['Quote#'])
+                active_supplier_df.at[idx, 'Cost MOQ'] = matching_record.get('VPC MOQ', row['Cost MOQ'])
+
+            # Note: The .get() method is used for dictionaries; adjust the logic for dataframe access as necessary.
+            # This pseudocode assumes 'SND Exp Date', 'SND Quote', 'SND MOQ', 'VPC Exp Date', 'VPC Quote', and 'VPC MOQ'
+            # are the correct column names in your SND and VPC dataframes. Adjust as necessary to fit your actual dataframe structures.
+
             # -----------------------------------------------------------------------------
 
         # Convert the 'PS Award Exp Date' in active_supplier_df to 'MM-DD-YYYY' format
@@ -287,7 +302,7 @@ def perform_vlookup(button_to_disable):
             'New Item',  # New Item is going to be populated if the item was not in the prev contract
             np.where(  # Locate where they are going to include the other contingencies
                 active_supplier_df['Price'] == active_supplier_df['LW PRICE'],
-                'No Change',
+                'No Change',  # The no change will populate if the price column is identical from one week to the next
                 np.where(
                     active_supplier_df['Price'] > active_supplier_df['LW PRICE'],
                     'Price Increase',
