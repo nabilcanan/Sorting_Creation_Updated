@@ -324,7 +324,7 @@ def perform_vlookup(button_to_disable):
         # --------------------- End of Contract Change Logic --------------------------------------------
 
         # --------------------- VPC Type Logic -----------------------------------
-        # This needs to be added before we save the output file you idiot... thats why we needed it here
+        # This needs to be added before we save the output file you idiot... that's why we needed it here
         # Ensure 'Cost Exp Date' column exists
         if 'Cost MOQ' in active_supplier_df.columns:
             # Find the index of the 'Cost Exp Date' column
