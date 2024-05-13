@@ -13,7 +13,7 @@ def perform_vlookup(button_to_disable):
         # ------------------ SELECT CONTRACT FILE -------------------------------
         # Ask the user for the contract file
         contract_file = filedialog.askopenfilename(title="Select the contract file, where we need a vlookup",
-                                                   initialdir="P:\Partnership_Python_Projects\Creation\test_001")
+                                                   initialdir="H:\Program_Testing_Exec\Sorting_Creation_Updated\testing_new_logic_5_13_24")
 
         # ------------------ LOAD DATAFRAMES ------------------------------------
         # Load 'Active Supplier Contracts' and 'Prev Contract' sheets
@@ -212,6 +212,16 @@ def perform_vlookup(button_to_disable):
             active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
             prev_contract_df['IPN'] = prev_contract_df['IPN'].astype(str).str.strip()
 
+            # Reset 'Review Note' column to empty for user input and backup existing notes to 'LW Review Note'
+            if 'Review Note' in active_supplier_df.columns:
+                # Backup current review notes to 'LW Review Note'
+                active_supplier_df['LW Review Note'] = active_supplier_df['Review Note']
+
+            # Initialize 'Review Note' as an empty column
+            active_supplier_df['Review Note'] = ''
+
+            # ---------------- End of PRELIMINARY DATA PREPARATION ------------------------
+
             # Perform the merge operation to bring in the 'Cost' related columns from prev_contract_df
             # Here, we're creating a new DataFrame as a result of this merge to review the merge result before applying it back to active_supplier_df
             merged_df = pd.merge(
@@ -228,7 +238,8 @@ def perform_vlookup(button_to_disable):
             active_supplier_df['LW Cost Note'] = merged_df['Cost Note_prev']
             active_supplier_df['LW Quote#'] = merged_df['Quote#_prev']
             active_supplier_df['LW Cost Exp Date'] = merged_df['Cost Exp Date_prev']
-            active_supplier_df['LW Review Note'] = merged_df['Review Note_prev']
+            active_supplier_df['LW Review Note'] = merged_df[
+                'Review Note_prev']  # Update from previously backed-up data
 
             # ------------------ BACKLOG VALUE MAPPING TO LOST ITEMS ------------------
             # Create a mapping from 'Backlog CPN' to 'Backlog Value' in backlog_df
@@ -312,6 +323,38 @@ def perform_vlookup(button_to_disable):
         )
         # --------------------- End of Contract Change Logic --------------------------------------------
 
+        # --------------------- VPC Type Logic -----------------------------------
+        # This needs to be added before we save the output file you idiot... thats why we needed it here
+        # Ensure 'Cost Exp Date' column exists
+        if 'Cost MOQ' in active_supplier_df.columns:
+            # Find the index of the 'Cost Exp Date' column
+            cost_exp_date_index = active_supplier_df.columns.get_loc('Cost MOQ') + 1  # +1 to insert after
+
+            # Step 2: Insert the 'VPC TYPE' column if it doesn't already exist
+            if 'VPC TYPE' not in active_supplier_df.columns:
+                active_supplier_df.insert(loc=cost_exp_date_index, column='VPC TYPE',
+                                          value=np.nan)  # Initialize with NaN
+            else:
+                # If 'VPC TYPE' already exists but not in the right place, adjust its location.
+                active_supplier_df.drop(columns=['VPC TYPE'], inplace=True)
+                active_supplier_df.insert(loc=cost_exp_date_index, column='VPC TYPE', value=np.nan)
+
+            # Normalize the 'PART ID' in VPC DataFrame for a more accurate lookup
+            vpc_df['PART ID'] = vpc_df['PART ID'].astype(
+                str).str.strip().str.upper()  # Assuming case insensitivity
+
+            # Create a mapping from 'PART ID' to 'VPC TYPE' in vpc_df
+            vpc_type_mapping = vpc_df.set_index('PART ID')['VPC TYPE'].to_dict()
+
+            # Display some sample mappings
+            print("Sample mappings from VPC DataFrame:", list(vpc_type_mapping.items())[:5])
+
+            # Map the 'VPC TYPE' to 'PSoft Part' in active_supplier_df
+            active_supplier_df['PSoft Part'] = active_supplier_df['PSoft Part'].astype(
+                str).str.strip().str.upper()  # Normalize similarly
+            active_supplier_df['VPC TYPE'] = active_supplier_df['PSoft Part'].map(vpc_type_mapping)
+        # --------------------- End of VPC Type logic -----------------------------
+
         # --------------------- Save Output File Logic --------------------------------------------------
         # Ask the user for the output file path
         output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", title="Save the output file as",
@@ -353,6 +396,28 @@ def perform_vlookup(button_to_disable):
                 for cell in sheet["1:1"]:
                     cell.alignment = Alignment(wrap_text=True)
                 # --------------------- End of Saving the desired sheets in final output -----------------
+
+                # --------------------- Duplicate Psoft part logic -----------------
+                # Applying conditional formatting for duplicates in 'PSoft Part'
+                psoft_part_column = get_column_letter(
+                    active_supplier_df.columns.get_loc('PSoft Part') + 1)  # +1 as DataFrame columns are 0-indexed
+
+                # Read back the data from the worksheet to find duplicates
+                psoft_parts = {}
+                for row in range(2, sheet.max_row + 1):  # Skip header row, start from 2
+                    cell_value = sheet[f'{psoft_part_column}{row}'].value
+                    if cell_value in psoft_parts:
+                        psoft_parts[cell_value].append(f'{psoft_part_column}{row}')
+                    else:
+                        psoft_parts[cell_value] = [f'{psoft_part_column}{row}']
+
+                # Apply light red fill to duplicates
+                light_red_fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")
+                for cells in psoft_parts.values():
+                    if len(cells) > 1:  # More than one occurrence means duplicates
+                        for cell in cells:
+                            sheet[cell].fill = light_red_fill
+                # --------------------- End of Duplicate psoft part logic ----------------
 
                 # --------------------- Additional formatting for specific columns -----------------------------
                 # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'

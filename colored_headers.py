@@ -52,6 +52,7 @@ headers_to_color = {
     'Quote#': "0000FFFF",
     'Cost Exp Date': "0000FFFF",
     'Cost MOQ': "0000FFFF",
+    'VPC TYPE': "0000FFFF",
     'PSoft Part': "FF0070c0",
     'MPN': "FFa9c4e9",
     'MFG': "FFa9c4e9",

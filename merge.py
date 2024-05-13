@@ -11,7 +11,7 @@ def merge_files_and_create_lost_items(button_to_disable):
 
     for file_name in file_names:
         file_path = filedialog.askopenfilename(title="Select {} file".format(file_name),
-                                               initialdir="H:\Program_Testing_Exec\Sorting_Creation_Updated\Testing_Everything_2_12_24")
+                                               initialdir="H:\Program_Testing_Exec\Sorting_Creation_Updated\Testing_Everything_2_26_24")
         if not file_path:
             messagebox.showerror("Error", "File selection cancelled.")
             return
