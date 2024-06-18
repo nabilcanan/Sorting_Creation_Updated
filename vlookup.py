@@ -270,33 +270,30 @@ def perform_vlookup(button_to_disable):
             # -----------------------------------------------------------------------------------
 
             # ------------------------ SND and VPC Logic ----------------------------------------
-
+            '''
+            Here we added a cost value that updates the cost column based on if here is a matching product id with 
+            the psoft part number and we can match the new cost to that column. 
+            '''
             # Check for a matching entry in the SND dataframe
             matching_snd = snd_df[snd_df['Product ID'].astype(str) == str(psoft_part)]
             if not matching_snd.empty:
-                # print(f"Match found in SND for PSoft Part: {psoft_part}")
-                # Assume the first match is the one we want
                 matching_record = matching_snd.iloc[0]
-                # Update the active workbook with the SND data
-                active_supplier_df.at[idx, 'Cost Exp Date'] = matching_record.get('SND Exp Date',
-                                                                                  row['Cost Exp Date'])
+                active_supplier_df.at[idx, 'Cost'] = matching_record.get('SND Cost', row['Cost'])  # Update Cost
+                active_supplier_df.at[idx, 'Cost Exp Date'] = matching_record.get('SND Exp Date', row['Cost Exp Date'])
                 active_supplier_df.at[idx, 'Quote#'] = matching_record.get('SND Quote', row['Quote#'])
                 active_supplier_df.at[idx, 'Cost MOQ'] = matching_record.get('SND MOQ', row['Cost MOQ'])
 
             # Check for a matching entry in the VPC dataframe
             matching_vpc = vpc_df[vpc_df['PART ID'].astype(str) == str(psoft_part)]
+
             if not matching_vpc.empty:
-                # print(f"Match found in VPC for PSoft Part: {psoft_part}")
-                # Assume the first match is the one we want
                 matching_record = matching_vpc.iloc[0]
-                # Update the active workbook with the VPC data
-                # If SND has already provided a value, you might want to decide which source has priority
-                active_supplier_df.at[idx, 'Cost Exp Date'] = matching_record.get('VPC Exp Date',
-                                                                                  row['Cost Exp Date'])
+                active_supplier_df.at[idx, 'Cost'] = matching_record.get('VPC Cost', row['Cost'])  # Update Cost
+                active_supplier_df.at[idx, 'Cost Exp Date'] = matching_record.get('VPC Exp Date', row['Cost Exp Date'])
                 active_supplier_df.at[idx, 'Quote#'] = matching_record.get('VPC Quote', row['Quote#'])
                 active_supplier_df.at[idx, 'Cost MOQ'] = matching_record.get('VPC MOQ', row['Cost MOQ'])
 
-            # Note: The .get() method is used for dictionaries; adjust the logic for dataframe access as necessary.
+        # Note: The .get() method is used for dictionaries; adjust the logic for dataframe access as necessary.
             # This pseudocode assumes 'SND Exp Date', 'SND Quote', 'SND MOQ', 'VPC Exp Date', 'VPC Quote', and 'VPC MOQ'
             # are the correct column names in your SND and VPC dataframes. Adjust as necessary to fit your actual dataframe structures.
 
@@ -305,8 +302,7 @@ def perform_vlookup(button_to_disable):
         # Convert the 'PS Award Exp Date' in active_supplier_df to 'MM-DD-YYYY' format
         active_supplier_df['PS Award Exp Date'] = pd.to_datetime(active_supplier_df['PS Award Exp Date'],
                                                                  errors='coerce').dt.strftime('%m-%d-%Y')
-        # --------------------- End of: UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME-----------
-
+        # --------------------- End of: UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME--------
         # ---------------------- Contract Change Logic -----------------------------------------------
         active_supplier_df['Contract Change'] = np.where(
             active_supplier_df['LW PRICE'].isna(),  # Check if 'LW PRICE' is NaN or null
