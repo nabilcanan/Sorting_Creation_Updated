@@ -11,20 +11,20 @@ def merge_files_and_create_lost_items(button_to_disable):
 
     for file_name in file_names:
         file_path = filedialog.askopenfilename(title="Select {} file".format(file_name),
-                                               initialdir="H:\Program_Testing_Exec\Sorting_Creation_Updated\testing_new_logic_5_20_24")
+                                               initialdir="P:\Partnership_Python_Projects\Creation\WEEKLY CONTRACT FILES")
         if not file_path:
             messagebox.showerror("Error", "File selection cancelled.")
             return
         file_paths.append(file_path)
-
     active_award_file_path = file_paths[0]
     active_award_workbook = load_workbook(active_award_file_path)
 
     # Load active and prev contract dataframes
-    active_df = pd.read_excel(active_award_file_path, sheet_name=0, skiprows=1)  # considering headers on 2nd row
+    active_df = pd.read_excel(active_award_file_path, sheet_name=0, skiprows=1,
+                              dtype={'IPN': str})  # considering headers on 2nd row
 
     prev_contract_file_path = file_paths[1]
-    prev_df = pd.read_excel(prev_contract_file_path, sheet_name=0)  # headers on 1st row
+    prev_df = pd.read_excel(prev_contract_file_path, sheet_name=0, dtype={'IPN': str})  # headers on 1st row
 
     # Always create 'Lost Items' sheet
     lost_items_sheet = active_award_workbook.create_sheet('Lost Items')

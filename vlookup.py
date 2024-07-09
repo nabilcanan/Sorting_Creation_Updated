@@ -319,6 +319,29 @@ def perform_vlookup(button_to_disable):
         )
         # --------------------- End of Contract Change Logic --------------------------------------------
 
+        # ------------------- MOQ Match Logic ----------------------------------------------------
+        # Merge 'MOQ' from prev_contract_df into active_supplier_df for comparison
+        active_supplier_df = pd.merge(
+            active_supplier_df,
+            prev_contract_df[['IPN', 'MOQ']],
+            on='IPN',
+            how='left',
+            suffixes=('', '_prev')
+        )
+
+        # Locate the 'Contract Change' column index
+        contract_change_idx = active_supplier_df.columns.get_loc('Contract Change')
+
+        # Add the 'MOQ Match' column next to the 'Contract Change' column
+        active_supplier_df.insert(contract_change_idx + 1, 'MOQ Match', '')
+
+        # Populate the 'MOQ Match' column
+        active_supplier_df['MOQ Match'] = np.where(
+            active_supplier_df['MOQ'] == active_supplier_df['MOQ_prev'], 'Y', 'N'
+        )
+        active_supplier_df.drop(columns=['MOQ_prev'], inplace=True)
+        # ----------------------- End of MOQ ----------------------------------------------------
+
         # --------------------- VPC Type Logic -----------------------------------
         # This needs to be added before we save the output file you idiot... that's why we needed it here
         # Ensure 'Cost Exp Date' column exists
