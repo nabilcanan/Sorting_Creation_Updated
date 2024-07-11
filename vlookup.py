@@ -17,19 +17,32 @@ def perform_vlookup(button_to_disable):
 
         # ------------------ LOAD DATAFRAMES ------------------------------------
         # Load 'Active Supplier Contracts' and 'Prev Contract' sheets
-        active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1)
-        prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0, dtype={'PSoft Part': str})
-        lost_items_df = pd.read_excel(contract_file, sheet_name='Lost Items')
-        awards_df = pd.read_excel(contract_file, sheet_name='Awards')
-        snd_df = pd.read_excel(contract_file, sheet_name='SND')
-        vpc_df = pd.read_excel(contract_file, sheet_name='VPC')
-        backlog_df = pd.read_excel(contract_file, sheet_name='Backlog')
-        sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History')
-        running_file_df = pd.read_excel(contract_file, sheet_name='Price Increases')
+        active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1,
+                                           dtype={'IPN': str})
+        prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0,
+                                         dtype={'IPN': str, 'PSoft Part': str})
+        lost_items_df = pd.read_excel(contract_file, sheet_name='Lost Items', dtype={'IPN': str})
+        awards_df = pd.read_excel(contract_file, sheet_name='Awards', dtype={'Award CPN': str})
+        snd_df = pd.read_excel(contract_file, sheet_name='SND', dtype={'IPN': str})
+        vpc_df = pd.read_excel(contract_file, sheet_name='VPC', dtype={'IPN': str})
+        backlog_df = pd.read_excel(contract_file, sheet_name='Backlog', dtype={'IPN': str})
+        sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History', dtype={'IPN': str})
+        running_file_df = pd.read_excel(contract_file, sheet_name='Price Increases',
+                                        dtype={'Creation Part Number': str})
 
         print("Loaded 'Active Supplier Contracts' sheet with shape:", active_supplier_df.shape)
         print("Loaded 'Prev Contract' sheet with shape:", prev_contract_df.shape)
         # ---------------- End of Loading Sheets ---------------------------------
+
+        # Ensure 'IPN' and 'Award CPN' columns are of string type and have leading zeros
+        dataframes = [active_supplier_df, prev_contract_df, lost_items_df, awards_df, snd_df, vpc_df, backlog_df,
+                      sales_history_df, running_file_df]
+        for df in dataframes:
+            if 'IPN' in df.columns:
+                df['IPN'] = df['IPN'].astype(str).str.zfill(6)  # Convert to string and pad with leading zeros
+            if 'Award CPN' in df.columns:
+                df['Award CPN'] = df['Award CPN'].astype(str).str.zfill(
+                    6)  # Convert to string and pad with leading zeros
 
         # ------------------ PRELIMINARY DATA PREPARATION ----------------------------
         # Drop the 'LW PRICE' column if it exists in the 'Prev Contract' dataframe
@@ -60,20 +73,11 @@ def perform_vlookup(button_to_disable):
         # ------------------ UPDATE AWARDS DETAILS IN ACTIVE SUPPLIER DATAFRAME ------------------
         for idx, row in active_supplier_df.iterrows():
             ipn = row['IPN']  # we use the IPN value to go back and forth between the awards dataframe
-            # Ensure both IPN columns are in a consistent format
-            active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
-            awards_df['Award CPN'] = awards_df['Award CPN'].astype(str).str.strip()
-
-            # Define a function to match IPNs considering non-numeric values as well
-            def match_ipns(awards_ipn, active_ipn):
-                # Implement your matching logic here, possibly using regex for flexible matching
-                # For simplicity, this example just uses a direct match, but you should adjust this as needed
-                return awards_ipn == active_ipn
 
             # Apply matching logic to find matching indices
-            matching_indices = awards_df.apply(lambda row: match_ipns(row['Award CPN'], str(ipn)), axis=1)
+            matching_indices = awards_df[awards_df['Award CPN'] == ipn].index
 
-            if matching_indices.any():
+            if not matching_indices.empty:
                 # Convert 'End Date' to datetime and then to the desired string format
                 awards_df.loc[matching_indices, 'End Date'] = pd.to_datetime(
                     awards_df.loc[matching_indices, 'End Date'],
@@ -83,10 +87,10 @@ def perform_vlookup(button_to_disable):
                 awards_df = awards_df.dropna(subset=['End Date'])
 
                 # Recheck matching indices after potential row drops
-                matching_indices = (awards_df['Award CPN'] == str(ipn)) & awards_df['Award CPN'].str.isnumeric()
+                matching_indices = awards_df[awards_df['Award CPN'] == ipn].index
 
-                if not awards_df[matching_indices].empty:
-                    valid_end_dates = awards_df[matching_indices]
+                if not awards_df.loc[matching_indices].empty:
+                    valid_end_dates = awards_df.loc[matching_indices]
                     latest_end_date = valid_end_dates['End Date'].max()
                     active_supplier_df.at[idx, 'PS Award Exp Date'] = latest_end_date
 
@@ -100,18 +104,18 @@ def perform_vlookup(button_to_disable):
                     if pd.notna(first_matched_cust_id):
                         active_supplier_df.at[idx, 'PS Awd Cust ID'] = first_matched_cust_id
 
-            active_supplier_df['PS Award Price'] = active_supplier_df['PS Award Price'].apply(pd.to_numeric,
-                                                                                              errors='coerce')
-            awards_df['Award Price'] = awards_df['Award Price'].apply(pd.to_numeric, errors='coerce')
+        # Convert 'PS Award Price' to numeric
+        active_supplier_df['PS Award Price'] = pd.to_numeric(active_supplier_df['PS Award Price'], errors='coerce')
+        awards_df['Award Price'] = pd.to_numeric(awards_df['Award Price'], errors='coerce')
 
-            # Create a dictionary for 'Award CPN' and their 'Award Price' from awards_df
-            award_price_mapping = awards_df.set_index('Award CPN')['Award Price'].to_dict()
+        # Create a dictionary for 'Award CPN' and their 'Award Price' from awards_df
+        award_price_mapping = awards_df.set_index('Award CPN')['Award Price'].to_dict()
 
-            # Perform the comparison and update 'Price Match Award'
-            active_supplier_df['Price Match Award'] = active_supplier_df.apply(
-                lambda x: 'Y' if np.isclose(award_price_mapping.get(x['IPN'], np.nan), x['PS Award Price'],
-                                            atol=1e-5) else 'N', axis=1
-            )
+        # Perform the comparison and update 'Price Match Award'
+        active_supplier_df['Price Match Award'] = active_supplier_df.apply(
+            lambda x: 'Y' if np.isclose(award_price_mapping.get(x['IPN'], np.nan), x['PS Award Price'],
+                                        atol=1e-5) else 'N', axis=1
+        )
         # ----------------------- End of Update Awards Detail in active dataframe -----------------------
 
         # ------------------ UPDATE 'CORP AWARD LOADED' STATUS ------------------
@@ -294,10 +298,10 @@ def perform_vlookup(button_to_disable):
                 active_supplier_df.at[idx, 'Cost MOQ'] = matching_record.get('VPC MOQ', row['Cost MOQ'])
 
         # Note: The .get() method is used for dictionaries; adjust the logic for dataframe access as necessary.
-            # This pseudocode assumes 'SND Exp Date', 'SND Quote', 'SND MOQ', 'VPC Exp Date', 'VPC Quote', and 'VPC MOQ'
-            # are the correct column names in your SND and VPC dataframes. Adjust as necessary to fit your actual dataframe structures.
+        # This pseudocode assumes 'SND Exp Date', 'SND Quote', 'SND MOQ', 'VPC Exp Date', 'VPC Quote', and 'VPC MOQ'
+        # are the correct column names in your SND and VPC dataframes. Adjust as necessary to fit your actual dataframe structures.
 
-            # -----------------------------------------------------------------------------
+        # -----------------------------------------------------------------------------
 
         # Convert the 'PS Award Exp Date' in active_supplier_df to 'MM-DD-YYYY' format
         active_supplier_df['PS Award Exp Date'] = pd.to_datetime(active_supplier_df['PS Award Exp Date'],
