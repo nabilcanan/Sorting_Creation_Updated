@@ -39,10 +39,11 @@ def perform_vlookup(button_to_disable):
                       sales_history_df, running_file_df]
         for df in dataframes:
             if 'IPN' in df.columns:
-                df['IPN'] = df['IPN'].astype(str).str.zfill(6)  # Convert to string and pad with leading zeros
+                df['IPN'] = df['IPN'].astype(str).str.zfill(8)  # Convert to string and pad with leading zeros
             if 'Award CPN' in df.columns:
                 df['Award CPN'] = df['Award CPN'].astype(str).str.zfill(
-                    6)  # Convert to string and pad with leading zeros
+                    8)  # Convert to string and pad with leading zeros
+        # Adding a value here, so making 6 to 8 and so on makes the difference of how many leading 0s there are in the IPN
 
         # ------------------ PRELIMINARY DATA PREPARATION ----------------------------
         # Drop the 'LW PRICE' column if it exists in the 'Prev Contract' dataframe
@@ -213,8 +214,8 @@ def perform_vlookup(button_to_disable):
             # Assuming the IPN is in the first column for both dataframes
             # Iterate through the active_supplier_df to update each row based on matching IPN in prev_contract_df
             # Ensure IPN columns in both DataFrames are of the same type and prepared for matching
-            active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
-            prev_contract_df['IPN'] = prev_contract_df['IPN'].astype(str).str.strip()
+            # active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
+            # prev_contract_df['IPN'] = prev_contract_df['IPN'].astype(str).str.strip()
 
             # Reset 'Review Note' column to empty for user input and backup existing notes to 'LW Review Note'
             if 'Review Note' in active_supplier_df.columns:
