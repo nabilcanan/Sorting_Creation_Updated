@@ -6,7 +6,8 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from tkinter import filedialog, messagebox
 import warnings
 from queries import new_function
-from vlookup import perform_vlookup
+from vlookupnew import perform_vlookup
+# from vlookup import perform_vlookup
 from merge import merge_files_and_create_lost_items
 # from add_running import add_running_file_to_workbook
 import webbrowser

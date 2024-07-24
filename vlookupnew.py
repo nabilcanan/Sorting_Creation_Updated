@@ -10,33 +10,34 @@ import psutil
 
 def load_data(contract_file):
     dataframes = {
-        'active_supplier_df': pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1),
+        'active_supplier_df': pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1,
+                                            dtype={'IPN': str}),
         'prev_contract_df': pd.read_excel(contract_file, sheet_name='Prev Contract', header=0,
                                           dtype={'PSoft Part': str}),
-        'lost_items_df': pd.read_excel(contract_file, sheet_name='Lost Items'),
-        'awards_df': pd.read_excel(contract_file, sheet_name='Awards'),
-        'snd_df': pd.read_excel(contract_file, sheet_name='SND'),
-        'vpc_df': pd.read_excel(contract_file, sheet_name='VPC'),
-        'backlog_df': pd.read_excel(contract_file, sheet_name='Backlog'),
-        'sales_history_df': pd.read_excel(contract_file, sheet_name='Sales History'),
-        'running_file_df': pd.read_excel(contract_file, sheet_name='Price Increases')
+        'lost_items_df': pd.read_excel(contract_file, sheet_name='Lost Items', dtype={'IPN': str}),
+        'awards_df': pd.read_excel(contract_file, sheet_name='Awards', dtype={'Award CPN': str}),
+        'snd_df': pd.read_excel(contract_file, sheet_name='SND', dtype={'IPN': str}),
+        'vpc_df': pd.read_excel(contract_file, sheet_name='VPC', dtype={'IPN': str}),
+        'backlog_df': pd.read_excel(contract_file, sheet_name='Backlog', dtype={'IPN': str}),
+        'sales_history_df': pd.read_excel(contract_file, sheet_name='Sales History', dtype={'IPN': str}),
+        'running_file_df': pd.read_excel(contract_file, sheet_name='Price Increases',
+                                         dtype={'Creation Part Number': str})
     }
     return dataframes
 
 
-def format_ipn(ipn, length=7):
-    """ Ensure the IPN has leading zeros to a specific length """
-    return ipn.zfill(length)
+def format_ipn_columns(dataframes):
+    for df in dataframes:
+        if 'IPN' in df.columns:
+            df['IPN'] = df['IPN'].astype(str).str.zfill(8)  # Convert to string and pad with leading zeros
+        if 'Award CPN' in df.columns:
+            df['Award CPN'] = df['Award CPN'].astype(str).str.zfill(8)  # Convert to string and pad with leading zeros
 
 
 def prepare_data(active_supplier_df, prev_contract_df):
     if 'LW PRICE' in prev_contract_df.columns:
         prev_contract_df.drop('LW PRICE', axis=1, inplace=True)
     prev_contract_df.rename(columns={'Price': 'LW PRICE', 'MPN': 'LW MPN'}, inplace=True)
-
-    # Format IPNs to ensure they maintain leading zeros
-    active_supplier_df['IPN'] = active_supplier_df['IPN'].apply(lambda x: format_ipn(str(x)))
-    prev_contract_df['IPN'] = prev_contract_df['IPN'].apply(lambda x: format_ipn(str(x)))
 
     active_supplier_df = pd.merge(
         active_supplier_df,
@@ -48,11 +49,35 @@ def prepare_data(active_supplier_df, prev_contract_df):
     return active_supplier_df
 
 
-def update_awards_details(active_supplier_df, awards_df):
-    # Ensure 'IPN' and 'Award CPN' are treated as strings without stripping any characters
-    active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str)
-    awards_df['Award CPN'] = awards_df['Award CPN'].astype(str)
+# def merge_and_update_mpn_match(active_supplier_df, prev_contract_df):
+#     # Ensure 'IPN' columns are aligned
+#     active_supplier_df, prev_contract_df = active_supplier_df.align(prev_contract_df, axis=1, copy=False)
+#
+#     # Merge 'LW MPN' from prev_contract_df into active_supplier_df as 'Prev Contract MPN'
+#     active_supplier_df = pd.merge(
+#         active_supplier_df,
+#         prev_contract_df[['IPN', 'LW MPN']],
+#         on='IPN',
+#         how='left'
+#     ).rename(columns={'LW MPN': 'Prev Contract MPN'})
+#
+#     # Ensure 'MPN' and 'Prev Contract MPN' columns are aligned
+#     active_supplier_df['MPN'] = active_supplier_df['MPN'].astype(str)
+#     active_supplier_df['Prev Contract MPN'] = active_supplier_df['Prev Contract MPN'].astype(str)
+#
+#     # Update MPN Match
+#     active_supplier_df['MPN Match'] = np.where(active_supplier_df['MPN'] == active_supplier_df['Prev Contract MPN'], 'Y', 'N')
+#
+#     # Reorder columns to place 'Prev Contract MPN' and 'MPN Match' at the beginning
+#     columns_order = ['Prev Contract MPN', 'MPN Match'] + [col for col in active_supplier_df.columns if col not in ['Prev Contract MPN', 'MPN Match']]
+#     active_supplier_df = active_supplier_df[columns_order]
+#
+#     return active_supplier_df
 
+
+
+
+def update_awards_details(active_supplier_df, awards_df):
     # Print statements to check actual values in both columns
     print("Checking normalized IPNs in active_supplier_df:", active_supplier_df['IPN'].unique())
     print("Checking normalized Award CPNs in awards_df:", awards_df['Award CPN'].unique())
@@ -140,10 +165,6 @@ def merge_and_calculate_aggregates(active_supplier_df, prev_contract_df):
 
 
 def update_awards_details(active_supplier_df, awards_df):
-    # Normalize the 'IPN' and 'Award CPN' for consistent matching
-    active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.strip()
-    awards_df['Award CPN'] = awards_df['Award CPN'].astype(str).str.strip()
-
     # Define a function for IPN matching considering potential non-numeric values
     def match_ipns(awards_ipn, active_ipn):
         return awards_ipn == active_ipn
@@ -230,13 +251,39 @@ def map_backlog_values(backlog_df, lost_items_df):
 
 def calculate_12_month_cpn_sales(active_supplier_df, sales_history_df):
     date_column = 'Last Ship Date'  # Replace with your actual date column name
+    sales_cpn_column = 'Last Ship CPN'  # Replace with your actual column name for CPN
+    net_sales_column = 'Net'  # Replace with your actual column name for net sales
+
+    # Ensure the date column is in datetime format
     sales_history_df[date_column] = pd.to_datetime(sales_history_df[date_column], errors='coerce')
+
+    # Calculate the date for one year ago
     one_year_ago = datetime.now() - timedelta(days=365)
+
+    # Filter sales history to include only the last 12 months
     sales_history_filtered = sales_history_df[sales_history_df[date_column] >= one_year_ago]
-    sales_history_grouped = sales_history_filtered.groupby('Last Ship CPN')['Net'].sum().reset_index()
-    sales_net_mapping = sales_history_grouped.set_index('Last Ship CPN')['Net'].to_dict()
+
+    # Group by the CPN column and sum the net sales
+    sales_history_grouped = sales_history_filtered.groupby(sales_cpn_column)[net_sales_column].sum().reset_index()
+
+    # Create a dictionary for mapping CPN to net sales
+    sales_net_mapping = sales_history_grouped.set_index(sales_cpn_column)[net_sales_column].to_dict()
+
+    # Debugging: Print the sales_net_mapping dictionary to verify its contents
+    print("Sales Net Mapping:", sales_net_mapping)
+
+    # Ensure both IPN and Last Ship CPN are strings and zero-padded to the same length
+    active_supplier_df['IPN'] = active_supplier_df['IPN'].astype(str).str.zfill(8)
+    sales_history_df[sales_cpn_column] = sales_history_df[sales_cpn_column].astype(str).str.zfill(8)
+
+    # Map the summed net sales to the '12 Month CPN Sales' column in active_supplier_df
     active_supplier_df['12 Month CPN Sales'] = active_supplier_df['IPN'].map(sales_net_mapping)
+
+    # Debugging: Print a sample of the active_supplier_df to verify the mapping results
+    print(active_supplier_df[['IPN', '12 Month CPN Sales']].head())
+
     return active_supplier_df
+
 
 
 def update_costs_from_snd_vpc(active_supplier_df, snd_df, vpc_df):
@@ -245,18 +292,22 @@ def update_costs_from_snd_vpc(active_supplier_df, snd_df, vpc_df):
         # Update from SND DataFrame
         matching_snd = snd_df[snd_df['Product ID'].astype(str) == str(psoft_part)]
         if not matching_snd.empty:
-            active_supplier_df.at[idx, 'Cost'] = matching_snd.iloc[0]['SND Cost']
-            active_supplier_df.at[idx, 'Cost Exp Date'] = matching_snd.iloc[0]['SND Exp Date']
-            active_supplier_df.at[idx, 'Quote#'] = matching_snd.iloc[0]['SND Quote']
-            active_supplier_df.at[idx, 'Cost MOQ'] = matching_snd.iloc[0]['SND MOQ']
+            matching_record = matching_snd.iloc[0]
+            active_supplier_df.at[idx, 'Cost'] = matching_record.get('SND Cost', row['Cost'])  # Update Cost
+            active_supplier_df.at[idx, 'Cost Exp Date'] = matching_record.get('SND Exp Date', row['Cost Exp Date'])
+            active_supplier_df.at[idx, 'Quote#'] = matching_record.get('SND Quote', row['Quote#'])
+            if 'SND MOQ' in matching_record:
+                active_supplier_df.at[idx, 'Cost MOQ'] = matching_record.get('SND MOQ', row['Cost MOQ'])
 
         # Update from VPC DataFrame
         matching_vpc = vpc_df[vpc_df['PART ID'].astype(str) == str(psoft_part)]
         if not matching_vpc.empty:
-            active_supplier_df.at[idx, 'Cost'] = matching_vpc.iloc[0]['VPC Cost']
-            active_supplier_df.at[idx, 'Cost Exp Date'] = matching_vpc.iloc[0]['VPC Exp Date']
-            active_supplier_df.at[idx, 'Quote#'] = matching_vpc.iloc[0]['VPC Quote']
-            active_supplier_df.at[idx, 'Cost MOQ'] = matching_vpc.iloc[0]['VPC MOQ']
+            matching_record = matching_vpc.iloc[0]
+            active_supplier_df.at[idx, 'Cost'] = matching_record.get('VPC Cost', row['Cost'])  # Update Cost
+            active_supplier_df.at[idx, 'Cost Exp Date'] = matching_record.get('VPC Exp Date', row['Cost Exp Date'])
+            active_supplier_df.at[idx, 'Quote#'] = matching_record.get('VPC Quote', row['Quote#'])
+            if 'VPC MOQ' in matching_record:
+                active_supplier_df.at[idx, 'Cost MOQ'] = matching_record.get('VPC MOQ', row['Cost MOQ'])
 
     return active_supplier_df
 
@@ -299,10 +350,10 @@ def update_moq_match(active_supplier_df, prev_contract_df):
     contract_change_idx = active_supplier_df.columns.get_loc('Contract Change')
 
     # Insert the 'MOQ Match' column next to 'Contract Change'
-    active_supplier_df.insert(contract_change_idx + 1, 'MOQ Match', '')
+    active_supplier_df.insert(contract_change_idx + 1, 'MOQ Match ', '')
 
     # Determine matches between current and previous MOQ values
-    active_supplier_df['MOQ Match'] = np.where(
+    active_supplier_df['MOQ Match '] = np.where(
         active_supplier_df['MOQ'] == active_supplier_df['MOQ_prev'], 'Y', 'N'
     )
 
@@ -415,7 +466,7 @@ def save_output_file(active_supplier_df, prev_contract_df, lost_items_df, awards
 
             # Apply conditional formatting for duplicates in 'PSoft Part'
             sheet = writer.sheets['Active Supplier Contracts']
-            apply_conditional_formatting(sheet)
+            apply_conditional_formatting(sheet, active_supplier_df)
             # --------------------- Additional formatting for specific columns -----------------------------
             # Define the columns for 'Price_x', 'Cost', 'GP%', 'Cost Exp Date', 'Award Date', and 'Last Update Date'
             # Pi Sent date, pi eff date, 12 month CPN Sales, 90 DAY PI - NEW PRICE, PS Award Price
@@ -523,18 +574,25 @@ def save_output_file(active_supplier_df, prev_contract_df, lost_items_df, awards
         messagebox.showinfo("Cancelled", "File save was cancelled.")
 
 
-def apply_conditional_formatting(sheet):
-    psoft_part_column = get_column_letter(sheet.max_column + 1)  # Assume 'PSoft Part' is the last column
+def apply_conditional_formatting(sheet, active_supplier_df):
+    # Locate the 'PSoft Part' column index
+    psoft_part_column_index = active_supplier_df.columns.get_loc(
+        'PSoft Part') + 1  # +1 because Excel columns are 1-indexed
+    psoft_part_column = get_column_letter(psoft_part_column_index)
+
+    # Read back the data from the worksheet to find duplicates
     psoft_parts = {}
-    for row in range(2, sheet.max_row + 1):
+    for row in range(2, sheet.max_row + 1):  # Skip header row, start from 2
         cell_value = sheet[f'{psoft_part_column}{row}'].value
         if cell_value in psoft_parts:
             psoft_parts[cell_value].append(f'{psoft_part_column}{row}')
         else:
             psoft_parts[cell_value] = [f'{psoft_part_column}{row}']
+
+    # Apply light red fill to duplicates
     light_red_fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")
     for cells in psoft_parts.values():
-        if len(cells) > 1:
+        if len(cells) > 1:  # More than one occurrence means duplicates
             for cell in cells:
                 sheet[cell].fill = light_red_fill
 
@@ -562,11 +620,15 @@ def perform_vlookup(button_to_disable):
         sales_history_df = dfs['sales_history_df']
         running_file_df = dfs['running_file_df']
 
+        format_ipn_columns([active_supplier_df, prev_contract_df, lost_items_df, awards_df, snd_df, vpc_df, backlog_df,
+                            sales_history_df, running_file_df])
+
         # Step 3: Process each DataFrame
         active_supplier_df = prepare_data(active_supplier_df, prev_contract_df)
         active_supplier_df = update_awards_details(active_supplier_df, awards_df)
         active_supplier_df = update_corp_award_loaded_status(active_supplier_df, awards_df)
         active_supplier_df = merge_and_calculate_aggregates(active_supplier_df, prev_contract_df)
+        # active_supplier_df = merge_and_update_mpn_match(active_supplier_df, prev_contract_df)
         active_supplier_df = update_from_running_file(active_supplier_df, running_file_df)
         active_supplier_df = update_cost_details(active_supplier_df, prev_contract_df)
         lost_items_df = map_backlog_values(backlog_df, lost_items_df)

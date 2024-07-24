@@ -29,7 +29,7 @@ headers_to_color = {
     'Price Match MPN': "FF0070c0",
     'MPN Match': "FF00b0f0",
     'Contract Change': "FF0070c0",
-    'MOQ Match': "FF0070c0",
+    'MOQ Match ': "FF0070c0",
     'count': "FF00b050",
     'Corrected PSID Ct': "FF00b050",
     'SUM': "FF00b050",

@@ -17,18 +17,15 @@ def perform_vlookup(button_to_disable):
 
         # ------------------ LOAD DATAFRAMES ------------------------------------
         # Load 'Active Supplier Contracts' and 'Prev Contract' sheets
-        active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1,
-                                           dtype={'IPN': str})
-        prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0,
-                                         dtype={'IPN': str, 'PSoft Part': str})
+        active_supplier_df = pd.read_excel(contract_file, sheet_name='Active Supplier Contracts', header=1,dtype={'IPN': str})
+        prev_contract_df = pd.read_excel(contract_file, sheet_name='Prev Contract', header=0, dtype={'IPN': str, 'PSoft Part': str})
         lost_items_df = pd.read_excel(contract_file, sheet_name='Lost Items', dtype={'IPN': str})
         awards_df = pd.read_excel(contract_file, sheet_name='Awards', dtype={'Award CPN': str})
         snd_df = pd.read_excel(contract_file, sheet_name='SND', dtype={'IPN': str})
         vpc_df = pd.read_excel(contract_file, sheet_name='VPC', dtype={'IPN': str})
         backlog_df = pd.read_excel(contract_file, sheet_name='Backlog', dtype={'IPN': str})
         sales_history_df = pd.read_excel(contract_file, sheet_name='Sales History', dtype={'IPN': str})
-        running_file_df = pd.read_excel(contract_file, sheet_name='Price Increases',
-                                        dtype={'Creation Part Number': str})
+        running_file_df = pd.read_excel(contract_file, sheet_name='Price Increases',dtype={'Creation Part Number': str})
 
         print("Loaded 'Active Supplier Contracts' sheet with shape:", active_supplier_df.shape)
         print("Loaded 'Prev Contract' sheet with shape:", prev_contract_df.shape)
@@ -43,7 +40,8 @@ def perform_vlookup(button_to_disable):
             if 'Award CPN' in df.columns:
                 df['Award CPN'] = df['Award CPN'].astype(str).str.zfill(
                     8)  # Convert to string and pad with leading zeros
-        # Adding a value here, so making 6 to 8 and so on makes the difference of how many leading 0s there are in the IPN
+        # Adding a value here, so making 6 to 8 and so on makes the difference of how many leading 0s there are in
+        # the IPN
 
         # ------------------ PRELIMINARY DATA PREPARATION ----------------------------
         # Drop the 'LW PRICE' column if it exists in the 'Prev Contract' dataframe
